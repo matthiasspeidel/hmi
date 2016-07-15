@@ -5,7 +5,7 @@ Version: 0.1.0
 Authors@R: c(
     person("Matthias", "Speidel", , "matthias.speidel@gmail.com", role = c("aut", "cre")),
     person("Joerg", "Drechsler", role = "aut"),
-    person("INSTITUTE FOR EMPLOYMENT RESEARCH, NUREMBERG", role = "rcp"))
+    person("Institute for Employment Research, Nuremberg", role = "rcp"))
 Maintainer: Matthias Speidel <matthias.speidel@gmail.com>
 Description: Multiple imputes variables according to a hierarchical model sequentially. MORE FOLLOWS.
 BugReports: http://github.com/matthiasspeidel/hmi/issues
