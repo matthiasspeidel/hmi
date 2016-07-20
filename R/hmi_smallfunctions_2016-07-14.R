@@ -47,7 +47,7 @@ update.alpha.coef <- function(Z_obs, y_obs, X_obs, beta.new, clID_obs, sigma.y.n
                         solve(t(x) %*% as.matrix(x) + sigma.y.new^2 * sigma.alpha.new.inv))
 
   # -- draw for each cluster new random effects.
-  alpha.new <- t(mapply(mvrnorm, mu = alpha.hat, Sigma = var.alpha.hat, n = 1))
+  alpha.new <- t(mapply(MASS::mvrnorm, mu = alpha.hat, Sigma = var.alpha.hat, n = 1))
   return(alpha.new)
 }
 
@@ -70,7 +70,7 @@ update.beta.coef <- function(Z_obs, alpha.new, b.hat.part1, clID_obs, y_obs, sig
   Z.alpha <- rowSums(Z_obs * alpha.new[clID_obs,])
   beta.hat <- b.hat.part1 %*% (y_obs - Z.alpha)
   Sigma.hat <- sigma.y.new^2 * xtx
-  newbeta <- mvrnorm(n = 1, mu = beta.hat, Sigma = Sigma.hat)
+  newbeta <- MASS::mvrnorm(n = 1, mu = beta.hat, Sigma = Sigma.hat)
   return(newbeta)
 }
 
@@ -125,7 +125,6 @@ sample_imp <- function(variable){
 
 #TODO: Fallunterscheidungen um mit Vectoren, Matrizen oder data.frames umzugehen!!!
 #Variable sollte ein Vektor oder factor sein
-#help function to get the type of the variables
 
 #' Get the type of variables.
 #'
@@ -206,4 +205,29 @@ get_type <- function(variable){
       return(ret)
     }
   }
+}
+
+
+
+#' Pool the results of the imputation function \code{wrapper}.
+#'
+#' This function applies the analysis the user is interested in, on all different imputed dataset.
+#' Then the results are pooled by simply averaging the results. So the user has to make sure that
+#' his analysis produces results with a meaningful average. And furthermore has to accept that no
+#' variance is calculated for these parameters.
+#' @param imputed_data A \code{mids} object from the \code{wrapper} imputation function.
+#' @param analysis A user generated function that he is interested in. See examples.
+#' @return A vector with all pooled results.
+hmi_pool <- function(imputed_data, analysis){
+
+  if (!is.mids(imputed_data)) stop("The data must have class mids.")
+  analyses <- as.list(1:imputed_data$m)
+  for (i in 1:imputed_data$m) {
+    data.i <- complete(imputed_data, i)
+    analyses[[i]] <- analysis(data.i)
+  }
+
+  tmp <- simplify2array(analyses)
+  mode(tmp) <- "numeric"
+  return(rowMeans(tmp))
 }
