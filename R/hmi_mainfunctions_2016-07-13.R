@@ -69,8 +69,7 @@
 #' and \code{allowed_max_variable} at the same time.
 #' @param allowed_min_value Analog to \code{allowed_max_value}.
 #' @param allowed_min_variable Analog to \code{allowed_max_variable}.
-#' @return A data.frame. It consists of the original \code{data} and \code{m}
-#' additional variables with the imputed values.
+#' @return A n x M matrix. Each column is one of M imputed y-variables.
 imp_multi <- function(y_imp_multi,
                       X_imp_multi,
                       Z_imp_multi,
@@ -116,23 +115,23 @@ imp_multi <- function(y_imp_multi,
                      max.iter = max.iter)
 
   ###sample m values for each parameter
-  select.record<-sample(1:dim(pars)[2],M,replace=TRUE)
-  select.chain<-sample(1:dim(pars)[1],M,replace=TRUE)
+  select.record <- sample(1:dim(pars)[2], M, replace = TRUE)
+  select.chain <- sample(1:dim(pars)[1], M, replace = TRUE)
 
   # -------------------- drawing samples with the parameters from the gibbs sampler --------
-  y.imp<-array(NA,dim=c(length(y),M))
+  y.imp <- array(NA, dim = c(n, M))
   ###start imputation
   for (j in 1:M){
 
+    rand.eff.imp <- matrix(pars[select.chain[j], select.record[j], 1:length.alpha], ncol = n.par.rand)
+    fix.eff.imp <- pars[select.chain[j], select.record[j], (length.alpha + 1):(length.alpha + ncol(X))]
+    sigma.y.imp <- pars[select.chain[j], select.record[j], length.alpha + ncol(X) + 1]
+    y.temp <- rnorm(n, X_model_matrix %*% fix.eff.imp + apply(Z * rand.eff.imp[clID,], 1, sum), sigma.y.imp)
 
-    rand.eff.imp<-matrix(pars[select.chain[j],select.record[j],1:length.alpha],ncol=n.par.rand)
-    fix.eff.imp<-pars[select.chain[j],select.record[j],(length.alpha+1):(length.alpha+ncol(X))]
-    sigma.y.imp<-pars[select.chain[j],select.record[j],(length.alpha+ncol(X)+1)]
-    y.temp<-rnorm(n, X_model_matrix%*%fix.eff.imp+apply(Z*rand.eff.imp[cl.id,],1,sum),sigma.y.imp)
-
-    y.imp[,j]<-ifelse(is.na(y),y.temp,y)
+    y.imp[,j] <- ifelse(is.na(y_imp_multi), y.temp, y_imp_multi)
   }
-
+  b <- Sys.time()
+  print(b - a)
   # --------- returning the imputed data --------------
   return(y.imp)
 }
@@ -147,7 +146,7 @@ imp_multi <- function(y_imp_multi,
 #' It generates the Markov chains of the imputation parameters by drawing from their conditional distributions
 #' until convergence
 #' @param y_gibbs A vector or data.frame with \code{ncol = 1} containing the target variable with the missing values.
-#' @param X_gibbs A data.frame containing the covariates influencing \code{y} via fixed effects.
+#' @param X_gibbs A matrix containing the covariates influencing \code{y} via fixed effects.
 #' If rows with missing values in \code{X} should also be imputed, put all your variables in a data.frame (or matrix)
 #' @param Z_gibbs A data.frame containing the covariates influencing \code{y} via random effects
 #' @param clID A factor (should come as data.frame or vector) containing the cluster IDs.
@@ -169,8 +168,6 @@ gibbs.coef <- function(y_gibbs, X_gibbs, Z_gibbs, clID, n.iter = 100, M = 10,
   X_obs <- X_gibbs[!is.na(y_gibbs), , drop = FALSE]
   Z_obs <- Z_gibbs[!is.na(y_gibbs), , drop = FALSE]
   clID_obs <- clID[!is.na(y_gibbs)]
-  # TESTWEISE cluster 8 zu 11 #clID_obs[clID_obs == 8] <- 11
-  by(y_obs, clID_obs, function(x) sum(!is.na(x)))
   clID_obs <- droplevels(clID_obs)
 
   n.obs <- sum(!is.na(y_gibbs))
@@ -190,14 +187,14 @@ gibbs.coef <- function(y_gibbs, X_gibbs, Z_gibbs, clID, n.iter = 100, M = 10,
 
   data_obs <- data.frame(y_obs = y_obs,
                          clID_obs = clID_obs)
-  # MS: get all variables in X and Z,
+  # MS: get all variables from X and Z into data_obs,
   # but only once (often Z is a subset of X and Zs variables should not appear again in the data set
   # if they are already brought to data_obs by X).
-  tmp <- merge(X_obs, Z_obs)
-  data_obs[, colnames(tmp)] <- tmp
+
+  data_obs[, colnames(X_obs)] <- X_obs
+  tmp <- names(Z_obs)[!(names(Z_obs) %in%  colnames(X_obs))]
+  data_obs[, tmp] <- Z_obs[, tmp]
   rm(tmp)
-
-
 
   tmp_model_formula <- formula(paste("y_obs ~ 0 + ",
                                      paste(colnames(X_obs), collapse = " + "),
@@ -218,13 +215,13 @@ gibbs.coef <- function(y_gibbs, X_gibbs, Z_gibbs, clID, n.iter = 100, M = 10,
   sims <- array(NA, c(n.chains, max.iter, n.par))
 
   ###generate starting values
-DEBUGCOUNTER <- 0
-DEBUG_COR <- array(dim = max.iter)
+#DEBUGCOUNTER <- 0
+#DEBUG_COR <- array(dim = max.iter)
   converged <- FALSE
   iter <- 0
   while(!converged & iter < max.iter){
-    DEBUGCOUNTER <- DEBUGCOUNTER + 1
-    set.seed(DEBUGCOUNTER)
+#    DEBUGCOUNTER <- DEBUGCOUNTER + 1
+#    set.seed(DEBUGCOUNTER)
     for (k in 1:n.chains){
       if (iter == 0){
 
@@ -251,15 +248,15 @@ DEBUG_COR <- array(dim = max.iter)
       draws <- array(NA, dim = c(n.iter, n.par))
 
       for (s in 1:n.iter){
-        DEBUGCOUNTER <- DEBUGCOUNTER + 1
-        set.seed(DEBUGCOUNTER)
-        save(Z_obs, alpha.new, b.hat.part1, clID_obs, y_obs, sigma.y.new,xtx, file ="updatesigmaalphacoefcrashes.rda")
-        print(DEBUGCOUNTER)#1904 war letzer angezeigter seed
-    DEBUG_COR[DEBUGCOUNTER] <- cor(alpha.new)[1,2]
-    save(DEBUG_COR, file = "DEBUG_COR.rda")
-        print(paste("Correlation of alpha.new:", round(DEBUG_COR[DEBUGCOUNTER], 3)))
+#        DEBUGCOUNTER <- DEBUGCOUNTER + 1
+#        set.seed(DEBUGCOUNTER)
+#        save(Z_obs, alpha.new, b.hat.part1, clID_obs, y_obs, sigma.y.new,xtx, file ="updatesigmaalphacoefcrashes.rda")
+#        print(DEBUGCOUNTER)#1904 war letzer angezeigter seed
+#    DEBUG_COR[DEBUGCOUNTER] <- cor(alpha.new)[1,2]
+#    save(DEBUG_COR, file = "DEBUG_COR.rda")
+#        print(paste("Correlation of alpha.new:", round(DEBUG_COR[DEBUGCOUNTER], 3)))
         #jetzt wars 1047
-        load("updatesigmaalphacoefcrashes.rda")
+#        load("updatesigmaalphacoefcrashes.rda")
 
         if(FALSE){
           #pdf("CorrelationAlphanew_Over1000runs.pdf")
@@ -312,7 +309,7 @@ DEBUG_COR <- array(dim = max.iter)
     get.mcmc <- vector("list", n.chains)
 
     for (k in 1:n.chains){
-      get.mcmc[[k]] <- as.mcmc(chains[k,,])
+      get.mcmc[[k]] <- coda::as.mcmc(chains[k,,])
     }
 
     ###calculate R.hat
