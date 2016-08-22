@@ -55,11 +55,10 @@
 #' @param n.iter An integer defining the number of
 #' iterations that should be run in each bunch of iterations.
 #' @param M An integer defining the number of imputations that should be made.
-#' @param n.chains An integer defining the number of Markov chains to be made.
-#' @param burn.in A numeric between 0 and 1 defining the percentage of draws from the gibbs sampler
-#' that should be discarded as burn in.
-#' @param max.iter An integer defining the maximum number of
-#' iterations that should be run in total.
+#' @param nitt An integer defining number of MCMC iterations (see MCMCglmm).
+#' @param thin An integer defining the thinning interval (see MCMCglmm).
+#' @param burnin An integer defining the percentage of draws from the gibbs sampler
+#' that should be discarded as burn in (see MCMCglmm).
 #' @param allowed_max_value A single numeric Value which shall not be exceeded
 #' when values are imputed (e.g. the age of a person can be limited to 125).
 #' @param allowed_max_variable A character naming a variable V.
@@ -75,6 +74,9 @@ imp_multi <- function(y_imp_multi,
                       Z_imp_multi,
                       clID,
                       M = 10,
+                      nitt = 3000,
+                      thin = 10,
+                      burnin = 1000,
                       allowed_max_value = Inf,
                       allowed_max_variable = NULL,
                       allowed_min_value = -Inf,
@@ -150,11 +152,6 @@ imp_multi <- function(y_imp_multi,
     fix.eff.imp <- matrix(xdraws[select.record[j], ], nrow = ncol(X_model_matrix))
 
     sigma.y.imp <- sqrt(variancedraws[select.record[j], ncol(variancedraws)])
-#!!! BEGIN DEBUG
-#    print(paste("variancedraws: ", c(variancedraws[select.record[j] ,])))
- #   sigma.y.imp <- sigma.y.true
-#print(paste("sigma.y.imp", sigma.y.imp))
-    #!!! END DEBUG
 
     y.temp <- rnorm(n, X_model_matrix %*% fix.eff.imp +
                       apply(Z_imp_multi_stand * rand.eff.imp[clID,], 1, sum), sigma.y.imp)
