@@ -136,7 +136,7 @@
 wrapper <- function(data, model_formula = NULL, parameter_list = NULL,
                     M = 10,
                     nitt = 3000,
-                    thin = 10,
+                    thin = 100,
                     burnin = 1000,
                     form = vector("character", length = ncol(data)),
                     post = vector("character", length = ncol(data))){
