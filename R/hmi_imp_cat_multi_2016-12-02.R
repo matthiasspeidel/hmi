@@ -123,12 +123,10 @@ imp_cat_multi <- function(y_imp_multi,
   tmp[, znames] <- Z_imp_multi_stand[, 1:ncol(Z_imp_multi_stand)]
   tmp[, "ClID"] <- clID
 
+  fixformula <- formula(paste("target~ - 1 + ",
+                                paste(xnames, ":trait", sep = "", collapse = "+"), sep = ""))
 
-
-    fixformula <- formula(paste("target~ - 1 + ",
-
-
-    randformula <- formula(paste("~us( - 1 + ", paste(znames, ":trait", sep = "", collapse = "+"),
+  randformula <- formula(paste("~us( - 1 + ", paste(znames, ":trait", sep = "", collapse = "+"),
                                  "):ClID", sep = ""))
 
 
@@ -146,6 +144,7 @@ imp_cat_multi <- function(y_imp_multi,
   J_matrix <- array(1, dim = c(J, J) -1) # matrix of ones
   I_matrix <- diag(J - 1) #identiy matrix
 
+  IJ<- (I_matrix + J_matrix)/J # see Hadfields Course notes p 97
   prior <- list(R = list(V = IJ, fix = TRUE),
                 G = list(G1 = list(V = diag(number_random_parameters), nu = 2)))
   # Wenn ich es richtig verstehe, ginge auch V = diag(2) und n = -1 oder n = -2
