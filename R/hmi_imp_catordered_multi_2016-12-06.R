@@ -71,7 +71,6 @@ imp_orderedcat_multi <- function(y_imp_multi,
                       allowed_min_value = -Inf,
                       allowed_min_variable = NULL){
 
-  a <- Sys.time()
   if(!is.factor(y_imp_multi)){
     warning("We suggest to make all your categorical variables to be a factor.")
     y_imp_multi <- as.factor(y_imp_multi)
@@ -226,8 +225,7 @@ imp_orderedcat_multi <- function(y_imp_multi,
     y_imp[, j] <- as.factor(ifelse(is.na(y_imp_multi), as.character(y_temp), as.character(y_imp_multi)))
   }
   colnames(y_imp) <- paste("imp", 1:M, sep = "_")
-  b <- Sys.time()
-  print(b - a)
+
   # --------- returning the imputed data --------------
   return(y_imp)
 }

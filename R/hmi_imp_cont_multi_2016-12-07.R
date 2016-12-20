@@ -75,8 +75,6 @@ imp_cont_multi <- function(y_imp_multi,
                       allowed_min_value = -Inf,
                       allowed_min_variable = NULL){
 
-  a <- Sys.time()
-
   # -----------------------------preparing the data ------------------
   # -- standardise the covariates in X (which are numeric and no intercept)
   need_stand <- apply(X_imp_multi, 2, get_type) == "cont"
@@ -151,8 +149,7 @@ imp_cont_multi <- function(y_imp_multi,
 
     y.imp[, j] <- ifelse(is.na(y_imp_multi), y.temp, y_imp_multi)
   }
-  b <- Sys.time()
-  print(b - a)
+
   # --------- returning the imputed data --------------
   return(y.imp)
 }
