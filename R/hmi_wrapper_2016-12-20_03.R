@@ -57,7 +57,7 @@ hmi <- function(data, model_formula = NULL,
                     thin = 100,
                     burnin = 1000,
                     maxit = 5){
-parameter_list <- NULL #Feature not supported yet.
+
   my_data <- data #wird spaeter ausgegeben. Entspricht von der Form dem
   #original Datensatz, nur, dass alle fehlenden Werte (mit Ausnahme der design
   #bedingt fehlenden) durch imputierte Werte ersetzt wurden.
@@ -432,7 +432,8 @@ How do you want to proceed: \n
         if(tmp_type == "categorical"){
           if(is.null(fe$clID_varname) || !(fe$clID_varname %in% names(my_data)) || tmp_variable != fe$target_varname){
 
-            imp <- imp_cat(data.org.categorical.imp = my_data, y.variable.name = tmp_variable)
+            imp <- imp_cat_cart(y_imp_multi = my_data[, tmp_variable],
+                                X_imp_multi = tmp_X)
 
           }else{
 
@@ -479,7 +480,7 @@ How do you want to proceed: \n
 
         if(tmp_type == "categorical" | tmp_type == "ordered_categorical"){
 
-          to_evaluate_numerical <- (1:nlevels(as.factor(my_data[, tmp_variable])))[to_evaluate]
+          to_evaluate_numerical <- as.numeric(as.factor(my_data[, tmp_variable]))
 
         }else{
           to_evaluate_numerical <- to_evaluate
