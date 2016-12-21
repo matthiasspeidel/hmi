@@ -47,11 +47,11 @@
 #'
 #' test <- sleepstudy
 #' test[sample(1:nrow(test), size = 20), "Reaction"] <- NA
-#' hmi_imp <- wrapper(data = test, model_formula = my.formula)
+#' hmi_imp <- hmi(data = test, model_formula = my.formula)
 #' hmifit <- hmi_pool(data = hmi_imp, analysis = my_analysis)
 #' pool(with(data = hmi_imp, expr = lmer(Reaction ~ Days + (1 + Days | Subject))))
 
-wrapper <- function(data, model_formula = NULL,
+hmi <- function(data, model_formula = NULL,
                     M = 10,
                     nitt = 3000,
                     thin = 100,
