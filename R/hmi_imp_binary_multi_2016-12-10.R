@@ -122,7 +122,7 @@ imp_binary_multi <- function(y_imp_multi,
   #znames_2 <- paste("Z", 1:ncol(Z_imp_multi_stand), sep = "")
 
   fixformula_2 <- formula(paste("target~", paste(xnames_2, collapse = "+"), "- 1", sep = ""))
-  randformula_2 <- as.formula(paste("~us(", paste(znames_2, collapse = "+"), "):ClID", sep = ""))
+  randformula_2 <- as.formula(paste("~us(0+", paste(znames_2, collapse = "+"), "):ClID", sep = ""))
 
   #Fix residual variance R at 1
   # cf. http://stats.stackexchange.com/questions/32994/what-are-r-structure-g-structure-in-a-glmm

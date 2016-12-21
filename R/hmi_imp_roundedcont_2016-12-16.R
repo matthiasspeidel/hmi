@@ -131,7 +131,7 @@ imp_roundedcont <- function(y_imp_multi, X_imp_multi,
   p6 <- y_imp_multi %% 1000 ==  0  #
   p6[is.na(p6)] <- FALSE
 
-  p <- factor(p1 + p2 + p3 + p4 + p5 + p6, levels = c("0", "1", "2", "3", "4", "5", "6"))
+  p <- factor(p1 + p2 + p3 + p4 + p5 + p6, levels = c("0", "1", "2", "3", "4", "5", "6"), ordered = TRUE)
   #MS: p ist Vektor der fuer jede Beobachtung (indirekt) angibt durch welchen Faktor sie ohne Rest teilbar ist.
   #MS: Bspw. bedeutet ein Wert von 4, dass der Wert von HEK0600 durch den Faktor 100 teilbar ist
   #MS: (weil er durch jeweils durch 5, 10, 50 und 100, teilbar ist. Also 4 mal wurde "TRUE" aufsummiert, was 4 ergbit.)
@@ -149,12 +149,15 @@ imp_roundedcont <- function(y_imp_multi, X_imp_multi,
   # estimation of the starting values for eta and the thresholds on the x-axis:
   # ordered probit maximum possible rounding on the rounded in income data
 
-  probitstart <- MASS::polr(as.ordered(p[!missind]) ~ inc.std[!missind],
+  probitstart <- MASS::polr(p[!missind] ~ inc.std[!missind],
                       contrasts = NULL, Hess = TRUE, model = TRUE,
                       method = "probit")
 
   gammastart <- as.vector(probitstart$coefficients) # the fix effect(s)
   kstart <- as.vector(probitstart$zeta) # the tresholds (in the summary labeled "Intercepts")
+  #explaining the tresholds:
+  #0 (rounding degree 1), 0|1 (reounding degree 5),  1|2 (10),  2|3 (50),  3|4 (100),   4|5 (500),   5|6 (1000)
+
 
   lmstart2 <- lm(log.inc.std[!missind] ~ 0 + ., data = MM_1[!missind, , drop = FALSE])
   betastart2 <- as.vector(lmstart2$coef)
@@ -200,7 +203,6 @@ imp_roundedcont <- function(y_imp_multi, X_imp_multi,
   #MS und diese entstandene negative log-likelihood minimierem um das Maximum der Likelihood zu bekommen.
 #if(!is.null(MLestimator.output.path)) save(m2, file = MLestimator.output.path)
 
-  #MS: dauert bei mir ca. 58 - 82 Minuten.
   par_ml2 <- m2$par
   hess <- m2$hessian
 
@@ -232,7 +234,7 @@ imp_roundedcont <- function(y_imp_multi, X_imp_multi,
 	inc.std.imp <- inc.std
  	log.inc.std.imp <- log.inc.std
 
- 	y.imp <- array(NA, dim = c(n, M))
+ 	y_imp <- array(NA, dim = c(n, M))
 
  	for(j in 1:M){
  	  ####draw new parameters #MS: because it is a Bayesian imputation
@@ -362,12 +364,12 @@ imp_roundedcont <- function(y_imp_multi, X_imp_multi,
 
       inc.imp[i] <- imp_temp
     }
-    y.imp[, j] <- inc.imp
+    y_imp[, j] <- inc.imp
   }
   #MS: END UNROUNDING-IMPUTATION#
   ###############################
   #MS: replace original income by imputed income
-  return(y.imp) #cbind(inc.imp, final.data2[, -which(names(final.data2) == y.variable.name)])
+  return(y_imp) #cbind(inc.imp, final.data2[, -which(names(final.data2) == y.variable.name)])
 }
 
 

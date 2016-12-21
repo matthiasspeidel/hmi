@@ -28,8 +28,6 @@ imp_cont <- function(y_imp_multi,
                       allowed_min_value = -Inf,
                       allowed_min_variable = NULL){
 
-  a <- Sys.time()
-
   # -----------------------------preparing the data ------------------
   # -- standardise the covariates in X (which are numeric and no intercept)
   types <- array(dim = ncol(X_imp_multi))
@@ -84,8 +82,7 @@ imp_cont <- function(y_imp_multi,
 
     y_imp[, j] <- ifelse(is.na(y_imp_multi), y_temp, y_imp_multi)
   }
-  b <- Sys.time()
-  print(b - a)
+
   # --------- returning the imputed data --------------
   return(y_imp)
 }
