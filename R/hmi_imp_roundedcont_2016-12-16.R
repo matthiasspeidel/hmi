@@ -7,9 +7,6 @@
 #' @param intercept_varname A character denoting the name of the intercept variable.
 #' @param M An integer defining the number of imputations that should be made.
 #' @return A n x M matrix. Each column is one of M imputed y-variables.
-#' @return Currently a vector with the completed variable that was to be imputed
-#' (so it includes the unchanged originaly observed data
-#' and the values that have been missing, but now are imputed) !!!MAKE IT FIT TO THE OTHER IMPUATION ROUTINES!!!
 imp_roundedcont <- function(y_imp_multi, X_imp_multi,
                                   intercept_varname = NULL, M){
 
@@ -167,9 +164,9 @@ imp_roundedcont <- function(y_imp_multi, X_imp_multi,
   #####maximum likelihood estimation using the starting values
   #MS: Die ML-Schaetzer sind dann die Imputationsparameter fuer die improved imputation.
 
-  function_generator <- function(para, X, y_in_negloglik, myp, mean.log.inc, sd.log.inc){
+  function_generator <- function(para, X, y_in_negloglik, my_p, mean.log.inc, sd.log.inc){
     ret <- function(para){
-      ret_tmp <- negloglik2(para = para, X = X, y_in_negloglik = y_in_negloglik, myp = myp,
+      ret_tmp <- negloglik2(para = para, X = X, y_in_negloglik = y_in_negloglik, my_p = my_p,
                               mean.log.inc = mean.log.inc, sd.log.inc = sd.log.inc)
       return(ret_tmp)
     }
@@ -191,7 +188,7 @@ imp_roundedcont <- function(y_imp_multi, X_imp_multi,
   negloglik2_generated <- function_generator(para = para,
                                              X = MM_1[-outliers, , drop = FALSE],
                                              y_in_negloglik = y_imp_multi[-outliers],
-                                             myp = as.numeric(as.character(p[-outliers])),
+                                             my_p = as.numeric(as.character(p[-outliers])),
                                              mean.log.inc = mean.log.inc,
                                              sd.log.inc = sd.log.inc)
   #MS:!!!STARTWERTE NUR ZUM CHECKEN, OB TATSAECHLICH MAXIMUM GEFUNDEN, MIT 0.7 MULTIPLIZIERT!!!
