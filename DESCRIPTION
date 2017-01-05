@@ -5,7 +5,9 @@ Version: 0.1.0
 Authors@R: c(
     person("Matthias", "Speidel", , "matthias.speidel@gmail.com", role = c("aut", "cre")),
     person("Joerg", "Drechsler", role = "aut"),
-    person("Institute for Employment Research, Nuremberg", role = "rcp"))
+    person("Shahab", "Jolani", role = "aut"),
+    person("Institute for Employment Research, Nuremberg, Germany", role = "rcp"),
+    person("Maastricht University, Nederlands", role = "rcp"))
 Maintainer: Matthias Speidel <matthias.speidel@gmail.com>
 Description: Multiple imputes variables according to a hierarchical model sequentially. MORE FOLLOWS.
 BugReports: http://github.com/matthiasspeidel/hmi/issues
@@ -14,11 +16,19 @@ Imports:
     lme4 (>= 1.1-12),
     MASS (>= 7.3-45),
     MCMCglmm (>= 2.22.1),
-    stats
+    mice (>= 2.25),
+    mvtnorm (>= 1.0-5),
+    pbivnorm (>= 0.6.0),
+    stats,
+    tmvtnorm (>= 1.4-10),
+    tree (>= 1.0-37)
 Suggests:
     boot (>= 1.3-18),
-    mice (>= 2.25)
+    knitr,
+    rmarkdown
 Depends: R (>= 3.3.1)
 License: GPL-3
 LazyData: TRUE
 RoxygenNote: 5.0.1
+VignetteBuilder: knitr
+URL: http://github.com/matthiasspeidel/hmi
