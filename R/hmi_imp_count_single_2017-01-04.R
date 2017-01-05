@@ -11,7 +11,7 @@ imp_count_single <- function(y_imp_multi,
   need_stand <- apply(X_imp_multi, 2, get_type) == "cont"
   X_imp_multi_stand <- X_imp_multi
   X_imp_multi_stand[, need_stand] <- scale(X_imp_multi[, need_stand])
-  #X_imp_multi %>% mutate_each_(funs(scale), vars = names(need_stand)[need_stand])
+
   #generate model.matrix (from the class matrix)
   n <- nrow(X_imp_multi_stand)
   X_model_matrix <- model.matrix(rnorm(n) ~ 0 + ., data = X_imp_multi_stand)
@@ -73,23 +73,11 @@ imp_count_single <- function(y_imp_multi,
 
     lambda <- exp(rnorm(n, X_model_matrix_2 %*% fix.eff.imp, sigma.y.imp))
 
-    #problematic <- lambda < 0
-    #while(any(problematic)){
-    #  lambda[problematic] <- rnorm(sum(problematic),
-    #                               X_model_matrix_2[problematic, , drop = FALSE] %*% fix.eff.imp +
-    #                                 apply(Z_imp_multi_stand[problematic, , drop = FALSE] * rand.eff.imp[clID,], 1, sum),
-    #                               sigma.y.imp)
-    #  problematic <- lambda < 0
-    #}
-
-
     y_imp[, j] <- ifelse(is.na(y_imp_multi), rpois(n, lambda), y_imp_multi)
   }
 
   # --------- returning the imputed data --------------
   return(y_imp)
-
-  #end testfield
 }
 
 

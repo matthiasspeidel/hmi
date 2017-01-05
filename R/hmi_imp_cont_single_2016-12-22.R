@@ -4,7 +4,7 @@
 #' @param y_imp_multi A Vector with the variable to impute.
 #' @param X_imp_multi A data.frame with the fixed effects variables.
 #' @return A n x 1 matrix.
-imp_cont <- function(y_imp_multi,
+imp_cont_single <- function(y_imp_multi,
                       X_imp_multi){
 
   #Initialising the returning vector
@@ -16,7 +16,7 @@ imp_cont <- function(y_imp_multi,
 
   types <- array(dim = ncol(X_imp_multi))
   for(j in 1:length(types)) types[j] <- get_type(X_imp_multi[, j])
-  #need_stand <- types == "cont"
+
   categorical <- types == "categorical"
 
   #remove categories with more than 10 observations as the model in the current form

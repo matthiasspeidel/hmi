@@ -10,28 +10,7 @@
 #
 # MS: All other shortcuts are shown when pressing 'Alt + Shift + K'
 # MS: Hinweis: es wird zu jeder R-Datei im Projekordner\R, die eine Documentation hat,
-#Mit devtools::document() auch eine .RD Datei erstellt.
-
-#########three different parts:
-
-#########Gibbs sampler functions: contains all functions to draw from
-#########				    the conditional distributions
-#########Gibbs sampler: 	    the actual Gibbs sampler function
-#########Imputation function:     the function that prepares the data before
-#########				   calling the Gibbs sampler and uses
-#########			          the parameters from the Gibbs for imputation
-
-
-
-
-
-
-
-#################################################
-#########Imputation function#####################
-#################################################
-
-
+# Mit devtools::document() auch eine .RD Datei erstellt.
 
 #' The function for hierarchical imputation of binary variables.
 #'
@@ -59,14 +38,12 @@ imp_binary_multi <- function(y_imp_multi,
 
   # -----------------------------preparing the data ------------------
   # -- standardise the covariates in X (which are numeric and no intercept)
-  #need_stand <- apply(X_imp_multi, 2, get_type) == "cont"
+
   X_imp_multi_stand <- X_imp_multi
-  #X_imp_multi_stand[, need_stand] <- scale(X_imp_multi[, need_stand])
-  #X_imp_multi %>% mutate_each_(funs(scale), vars = names(need_stand)[need_stand])
-  #generate model.matrix (from the class matrix)
+
   n <- nrow(X_imp_multi_stand)
   blob <- sample(0:1, size = n, replace = TRUE)
-  tmp_0 <- data.frame(y_binary = blob, X_imp_multi_stand)#hier sollte die cl.id nicht mit dabei sein
+  tmp_0 <- data.frame(y_binary = blob, X_imp_multi_stand)
 
   X_model_matrix_1 <- model.matrix(y_binary ~ 0 + ., data = tmp_0)
   # Remove ` from the variable names
@@ -74,11 +51,11 @@ imp_binary_multi <- function(y_imp_multi,
 
 
   # -- standardise the covariates in Z (which are numeric and no intercept)
-  #need_stand <- apply(Z_imp_multi, 2, get_type) == "cont"
-  Z_imp_multi_stand <- Z_imp_multi
-  #Z_imp_multi_stand[, need_stand] <- scale(Z_imp_multi[, need_stand])
 
-  # MS: If the user wants a fixed intercept, the wrapper function assures that X_imp_multi
+  Z_imp_multi_stand <- Z_imp_multi
+
+
+  # If the user wants a fixed intercept, the wrapper function assures that X_imp_multi
   # includes such a variable
 
   # Get the number of random effects variables
@@ -99,8 +76,7 @@ imp_binary_multi <- function(y_imp_multi,
   randformula_1 <- as.formula(paste("~us(", paste(znames_1, collapse = "+"), "):ClID", sep = ""))
 
   lmer_fixpart_1 <- paste("target~ 0 + ", paste(xnames_1, collapse = "+"), sep = "")
-  #lmer_randpart_1 <- paste("(", paste(znames_1, collapse = "+"), "|ClID)", sep = "")
-  #lmer_formula_1 <- formula(paste(lmer_fixpart_1, lmer_randpart_1, sep = "+"))
+
   reg_1 <- glm(formula(lmer_fixpart_1), data = tmp_1, family = binomial(link = "logit"))
 
   #remove linear dependent variables
@@ -108,7 +84,7 @@ imp_binary_multi <- function(y_imp_multi,
   tmp_2 <- data.frame(target = blob)
 
   xnames_2 <- xnames_1[!is.na(coefficients(reg_1))]
-  znames_2 <- znames_1#paste("Z", 1:ncol(Z_imp_multi_stand), sep = "")
+  znames_2 <- znames_1
 
   tmp_2[, xnames_2] <- X_model_matrix_1[, !is.na(coefficients(reg_1)), drop = FALSE]
   tmp_2[, znames_2] <- Z_imp_multi_stand
@@ -118,21 +94,14 @@ imp_binary_multi <- function(y_imp_multi,
   reg_2 <- glm(lmfixformula_2, data = tmp_2, family = binomial(link = "logit"))
   X_model_matrix_2 <- model.matrix(reg_2)
 
-  #xnames_2 <- paste("X", 1:ncol(X_model_matrix_2), sep = "")
-  #znames_2 <- paste("Z", 1:ncol(Z_imp_multi_stand), sep = "")
-
   fixformula_2 <- formula(paste("target~", paste(xnames_2, collapse = "+"), "- 1", sep = ""))
   randformula_2 <- as.formula(paste("~us(0+", paste(znames_2, collapse = "+"), "):ClID", sep = ""))
 
   #Fix residual variance R at 1
   # cf. http://stats.stackexchange.com/questions/32994/what-are-r-structure-g-structure-in-a-glmm
   prior <- list(R = list(V = 1, fix = 1),
-                G = list(G1 = list(V = diag(n.par.rand), nu = 0.002))) #PRIORIS NOCH ANPASSEN
+                G = list(G1 = list(V = diag(n.par.rand), nu = 0.002)))
 
-  # Wenn ich es richtig verstehe, ginge auch V = diag(2) und n = -1 oder n = -2
-  # fuer flache priors auf ]0, inf] bzw. nicht informative priors.
-  # (mir ist also nicht klar wo der unterschied ist).
-  # ist nicht jede flache prio auch non-informative?
   MCMCglmm_draws <- MCMCglmm::MCMCglmm(fixed = fixformula_2,
                                        random = randformula_2,
                                        data = tmp_2,
@@ -143,16 +112,15 @@ imp_binary_multi <- function(y_imp_multi,
                                        thin = thin,
                                        burnin = burnin)
 
-  # ??? Maybe a correction helps ???
-  # see http://stats.stackexchange.com/questions/32994/what-are-r-structure-g-structure-in-a-glmm
+  # correction. see:
+  # http://stats.stackexchange.com/questions/32994/what-are-r-structure-g-structure-in-a-glmm
   k <- ((16*sqrt(3))/(15*pi))^2
 
   pointdraws <- MCMCglmm_draws$Sol /sqrt(1 + k)
   xdraws <- pointdraws[, 1:ncol(X_model_matrix_2), drop = FALSE]
   zdraws <- pointdraws[, ncol(X_model_matrix_2) + 1:length.alpha, drop = FALSE]
   variancedraws <- MCMCglmm_draws$VCV
-  #! Die letzte Spalte beinhaltet die VARIANZ (nicht die Standardabweichung)
-  # Der Residuen!
+
   number_of_draws <- nrow(pointdraws)
   select_record <- sample(1:number_of_draws, M, replace = TRUE)
 
@@ -165,6 +133,7 @@ imp_binary_multi <- function(y_imp_multi,
   }
 
   y_imp <- array(NA, dim = c(n, M))
+
   ###start imputation
   for (j in 1:M){
 
@@ -191,7 +160,3 @@ imp_binary_multi <- function(y_imp_multi,
   # --------- returning the imputed data --------------
   return(y_imp)
 }
-
-
-# Generate documentation with devtools::document()
-# Build package with devtools::build() and devtools::build(binary = TRUE) for zips

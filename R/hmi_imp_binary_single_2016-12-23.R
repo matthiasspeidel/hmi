@@ -5,7 +5,7 @@
 #' @param X_imp_multi A data.frame with the fixed effects variables.
 #' @param M An integer defining the number of imputations that should be made.
 #' @return A n x M matrix. Each column is one of M imputed y-variables.
-imp_binary <- function(y_imp_multi,
+imp_binary_single <- function(y_imp_multi,
                       X_imp_multi){
   #Initialising the returning vector
   y_imp <- as.matrix(y_imp_multi, ncol = 1)
@@ -16,7 +16,7 @@ imp_binary <- function(y_imp_multi,
 
   types <- array(dim = ncol(X_imp_multi))
   for(j in 1:length(types)) types[j] <- get_type(X_imp_multi[, j])
-  #need_stand <- types == "cont"
+
   categorical <- types == "categorical"
 
   #remove categories with more than 10 observations as the model in the current form
@@ -37,8 +37,9 @@ imp_binary <- function(y_imp_multi,
 
   reg_1 <- lm(y ~ 0 + . , data = tmp_1)
 
+  # mice needs the binary variable as a factor
+  tmp_2 <- data.frame(y = as.factor(y_imp_multi))
 
-  tmp_2 <- data.frame(y = as.factor(y_imp_multi)) # mice needs the binary variable as a factor
 
   xnames_2 <- xnames_1[!is.na(coefficients(reg_1))]
   tmp_2[, xnames_2] <- X_model_matrix_1[, !is.na(coefficients(reg_1)), drop = FALSE]
