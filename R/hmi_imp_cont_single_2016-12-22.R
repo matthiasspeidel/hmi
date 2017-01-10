@@ -27,23 +27,23 @@ imp_cont_single <- function(y_imp_multi,
 
 
   n <- length(y_imp_multi)
-  lmstart <- lm(rnorm(n) ~ 0 +., data = X_imp_multi)
+  lmstart <- stats::lm(stats::rnorm(n) ~ 0 +., data = X_imp_multi)
 
-  X_model_matrix_1 <- model.matrix(lmstart)
+  X_model_matrix_1 <- stats::model.matrix(lmstart)
   xnames_1 <- paste("X", 1:ncol(X_model_matrix_1), sep = "")
 
-  tmp_1 <- data.frame(y = rnorm(n))
+  tmp_1 <- data.frame(y = stats::rnorm(n))
   tmp_1[, xnames_1] <- X_model_matrix_1
 
-  reg_1 <- lm(y ~ 0 + . , data = tmp_1)
+  reg_1 <- stats::lm(y ~ 0 + . , data = tmp_1)
 
   blob <- y_imp_multi
   tmp_2 <- data.frame(y = blob)
 
-  xnames_2 <- xnames_1[!is.na(coefficients(reg_1))]
-  tmp_2[, xnames_2] <- X_model_matrix_1[, !is.na(coefficients(reg_1)), drop = FALSE]
+  xnames_2 <- xnames_1[!is.na(stats::coefficients(reg_1))]
+  tmp_2[, xnames_2] <- X_model_matrix_1[, !is.na(stats::coefficients(reg_1)), drop = FALSE]
 
-  everything <- mice(data = tmp_2, m = 1,
+  everything <- mice::mice(data = tmp_2, m = 1,
                      method = "norm",
                      predictorMatrix = (1 - diag(1, ncol(tmp_2))),
                      visitSequence = (1:ncol(tmp_2))[apply(is.na(tmp_2),2,any)],

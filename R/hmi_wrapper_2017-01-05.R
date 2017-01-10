@@ -1,5 +1,5 @@
 
-#' Hierarchical Multilevel Imputation (hmi). The main wrapper function called by the user.
+#' hmi: Hierarchical Multilevel Imputation.
 #'
 #' The user has to pass his data to the function.
 #' Optionally he passes his analysis model formula so that \code{hmi} runs the imputation model
@@ -30,7 +30,8 @@
 #'
 #'  # ---- write in the following lines, what you are interetest in to do with your complete_data
 #'  # the following lines are an example where the analyst is interested in the fixed intercept
-#'  # and fixed slope and the random intercepts variance, the random slopes variance and their covariance
+#'  # and fixed slope and the random intercepts variance,
+#'  # the random slopes variance and their covariance
 #'  my_model <- lmer(my.formula, data = complete_data)
 #'
 #'  parameters_of_interest[[1]] <- fixef(my_model)[1]
@@ -42,16 +43,18 @@
 #'
 #'  # ---- do change this function below this line.
 #'  return(parameters_of_interest)
-#'}
-#'
+#' }
+#' require("lme4")
+#' require("mice")
+#' data(sleepstudy, package = "lme4")
 #' test <- sleepstudy
 #' test$Intercept <- 1
 #' test[sample(1:nrow(test), size = 20), "Reaction"] <- NA
 #' hmi_imp <- hmi(data = test, model_formula = my.formula)
 #' hmi_pool(mids = hmi_imp, analysis_function = my_analysis)
-#' #if you are interested in fixed effects only, consider using \code{pool} from \code{mice}.
+#' #if you are interested in fixed effects only, consider pool from mice:
 #' pool(with(data = hmi_imp, expr = lmer(Reaction ~ Days + (1 + Days | Subject))))
-
+#' @export
 hmi <- function(data, model_formula = NULL,
                     M = 10,
                     maxit = 5,
@@ -540,7 +543,7 @@ How do you want to proceed: \n
         }
 
         my_chainMean[l2, l1, i] <- mean(to_evaluate_numerical)
-        my_chainVar[l2, l1, i] <- var(to_evaluate_numerical)
+        my_chainVar[l2, l1, i] <- stats::var(to_evaluate_numerical)
       }
 
     }
@@ -551,7 +554,7 @@ How do you want to proceed: \n
 
 
 
-  imp_hmi <- setNames(vector("list", ncol(data)), colnames(data))
+  imp_hmi <- stats::setNames(vector("list", ncol(data)), colnames(data))
   for(l2 in incomplete_variables){
     n_mis_j <- sum(is.na(data[, l2]))
     imp_hmi[[l2]] <- as.data.frame(matrix(NA, nrow = n_mis_j, ncol = M, dimnames = list(NULL, 1:M)))

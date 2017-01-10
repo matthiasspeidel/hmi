@@ -50,7 +50,7 @@ imp_orderedcat_multi <- function(y_imp_multi,
 
   #generate model.matrix (from the class matrix)
   n <- nrow(X_imp_multi_stand)
-  X_model_matrix <- model.matrix(rnorm(n) ~ 0 + ., data = X_imp_multi_stand)
+  X_model_matrix <- stats::model.matrix(stats::rnorm(n) ~ 0 + ., data = X_imp_multi_stand)
   # Remove ` from the variable names
   colnames(X_model_matrix) <- gsub("`", "", colnames(X_model_matrix))
 
@@ -68,21 +68,22 @@ imp_orderedcat_multi <- function(y_imp_multi,
 
 
   n <- length(y_imp_multi)
-  lmstart <- lm(rnorm(n) ~ 0 +., data = X_imp_multi)
+  lmstart <- stats::lm(stats::rnorm(n) ~ 0 +., data = X_imp_multi)
 
-  X_model_matrix_1 <- model.matrix(lmstart)
+  X_model_matrix_1 <- stats::model.matrix(lmstart)
   xnames_1 <- paste("X", 1:ncol(X_model_matrix_1), sep = "")
+  znames <- paste("Z", 1:ncol(Z_imp_multi_stand), sep = "")
 
-  tmp_1 <- data.frame(y = rnorm(n))
+  tmp_1 <- data.frame(y = stats::rnorm(n))
   tmp_1[, xnames_1] <- X_model_matrix_1
 
-  reg_1 <- lm(y ~ 0 + . , data = tmp_1)
+  reg_1 <- stats::lm(y ~ 0 + . , data = tmp_1)
 
   blob <- y_imp_multi
   tmp_2 <- data.frame(target = blob)
 
-  xnames_2 <- xnames_1[!is.na(coefficients(reg_1))]
-  X_model_matrix_2 <- X_model_matrix_1[, !is.na(coefficients(reg_1)), drop = FALSE]
+  xnames_2 <- xnames_1[!is.na(stats::coefficients(reg_1))]
+  X_model_matrix_2 <- X_model_matrix_1[, !is.na(stats::coefficients(reg_1)), drop = FALSE]
   tmp_2[, xnames_2] <- X_model_matrix_2
   tmp_2[, znames] <- Z_imp_multi_stand
   tmp_2[, "ClID"] <- clID
@@ -94,10 +95,10 @@ imp_orderedcat_multi <- function(y_imp_multi,
   # -------------- calling the gibbs sampler to get imputation parameters----
 
 
-  fixformula <- formula(paste("target~ - 1 + ",
+  fixformula <- stats::formula(paste("target~ - 1 + ",
                                 paste(xnames_2, sep = "", collapse = "+")))
 
-  randformula <- formula(paste("~us( - 1 + ", paste(znames, sep = "", collapse = "+"),
+  randformula <- stats::formula(paste("~us( - 1 + ", paste(znames, sep = "", collapse = "+"),
                                  "):ClID", sep = ""))
 
 
@@ -154,7 +155,7 @@ imp_orderedcat_multi <- function(y_imp_multi,
 
     sigma.y.imp <- sqrt(variancedraws[select.record[j], ncol(variancedraws)])
 
-    latent <- rnorm(n, X_model_matrix_2 %*% fix.eff.imp +
+    latent <- stats::rnorm(n, X_model_matrix_2 %*% fix.eff.imp +
                       apply(Z_imp_multi_stand * rand.eff.imp[clID,], 1, sum), sigma.y.imp)
 
     #cutpoint: the first cutpoint is set to 0 by MCMCglmm

@@ -45,7 +45,7 @@ imp_binary_multi <- function(y_imp_multi,
   blob <- sample(0:1, size = n, replace = TRUE)
   tmp_0 <- data.frame(y_binary = blob, X_imp_multi_stand)
 
-  X_model_matrix_1 <- model.matrix(y_binary ~ 0 + ., data = tmp_0)
+  X_model_matrix_1 <- stats::model.matrix(y_binary ~ 0 + ., data = tmp_0)
   # Remove ` from the variable names
   colnames(X_model_matrix_1) <- gsub("`", "", colnames(X_model_matrix_1))
 
@@ -72,30 +72,31 @@ imp_binary_multi <- function(y_imp_multi,
   tmp_1[, znames_1] <- Z_imp_multi_stand
   tmp_1[, "ClID"] <- clID
 
-  fixformula_1 <- formula(paste("target~", paste(xnames_1, collapse = "+"), "- 1", sep = ""))
-  randformula_1 <- as.formula(paste("~us(", paste(znames_1, collapse = "+"), "):ClID", sep = ""))
+  fixformula_1 <- stats::formula(paste("target~", paste(xnames_1, collapse = "+"), "- 1", sep = ""))
+  randformula_1 <- stats::as.formula(paste("~us(", paste(znames_1, collapse = "+"), "):ClID", sep = ""))
 
   lmer_fixpart_1 <- paste("target~ 0 + ", paste(xnames_1, collapse = "+"), sep = "")
 
-  reg_1 <- glm(formula(lmer_fixpart_1), data = tmp_1, family = binomial(link = "logit"))
+  reg_1 <- stats::glm(stats::formula(lmer_fixpart_1), data = tmp_1,
+                      family = stats::binomial(link = "logit"))
 
   #remove linear dependent variables
 
   tmp_2 <- data.frame(target = blob)
 
-  xnames_2 <- xnames_1[!is.na(coefficients(reg_1))]
+  xnames_2 <- xnames_1[!is.na(stats::coefficients(reg_1))]
   znames_2 <- znames_1
 
-  tmp_2[, xnames_2] <- X_model_matrix_1[, !is.na(coefficients(reg_1)), drop = FALSE]
+  tmp_2[, xnames_2] <- X_model_matrix_1[, !is.na(stats::coefficients(reg_1)), drop = FALSE]
   tmp_2[, znames_2] <- Z_imp_multi_stand
   tmp_2[, "ClID"] <- clID
 
-  lmfixformula_2 <- formula(paste("target ~ 0 +", paste(xnames_2, collapse = "+"), sep = ""))
-  reg_2 <- glm(lmfixformula_2, data = tmp_2, family = binomial(link = "logit"))
-  X_model_matrix_2 <- model.matrix(reg_2)
+  lmfixformula_2 <- stats::formula(paste("target ~ 0 +", paste(xnames_2, collapse = "+"), sep = ""))
+  reg_2 <- stats::glm(lmfixformula_2, data = tmp_2, family = stats::binomial(link = "logit"))
+  X_model_matrix_2 <- stats::model.matrix(reg_2)
 
-  fixformula_2 <- formula(paste("target~", paste(xnames_2, collapse = "+"), "- 1", sep = ""))
-  randformula_2 <- as.formula(paste("~us(0+", paste(znames_2, collapse = "+"), "):ClID", sep = ""))
+  fixformula_2 <- stats::formula(paste("target~", paste(xnames_2, collapse = "+"), "- 1", sep = ""))
+  randformula_2 <- stats::as.formula(paste("~us(0+", paste(znames_2, collapse = "+"), "):ClID", sep = ""))
 
   #Fix residual variance R at 1
   # cf. http://stats.stackexchange.com/questions/32994/what-are-r-structure-g-structure-in-a-glmm
@@ -128,7 +129,7 @@ imp_binary_multi <- function(y_imp_multi,
 
 
   linkfunction <- function(x){
-    ret <- inv.logit(x)
+    ret <- boot::inv.logit(x)
     return(ret)
   }
 
@@ -145,14 +146,14 @@ imp_binary_multi <- function(y_imp_multi,
 
     sigma_y_imp <- sqrt(variancedraws[select_record[j], ncol(variancedraws)])
 
-    linearpredictor <- rnorm(n, X_model_matrix_2 %*% fix_eff_imp +
+    linearpredictor <- stats::rnorm(n, X_model_matrix_2 %*% fix_eff_imp +
                       apply(Z_imp_multi_stand * rand_eff_imp[clID,], 1, sum), 0*sigma_y_imp)
 
 
     one_prob <- linkfunction(linearpredictor)
 
 
-    y_temp <- as.numeric(runif(n) < one_prob)
+    y_temp <- as.numeric(stats::runif(n) < one_prob)
 
     y_imp[, j] <- ifelse(is.na(y_imp_multi), y_temp, y_imp_multi)
   }
