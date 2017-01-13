@@ -3,30 +3,34 @@ Type: Package
 Title: Hierarchical Multiple Imputation
 Version: 0.1.0
 Authors@R: c(
-    person("Matthias", "Speidel", , "matthias.speidel@gmail.com", role = c("aut", "cre")),
-    person("Joerg", "Drechsler", role = "aut"),
-    person("Shahab", "Jolani", role = "aut"),
-    person("Institute for Employment Research, Nuremberg, Germany", role = "rcp"),
-    person("Maastricht University, Nederlands", role = "rcp"))
+    person("Matthias", "Speidel", , "matthias.speidel@gmail.com", role = c("aut", "cre"),
+    comment = "Institute for Employment Research, Nuremberg, Germany"),
+    person("Joerg", "Drechsler", role = "aut",
+    comment = "Institute for Employment Research, Nuremberg, Germany"),
+    person("Shahab", "Jolani", role = "aut",
+    comment = "Maastricht University, Maastricht, The Netherlands"))
 Maintainer: Matthias Speidel <matthias.speidel@gmail.com>
 Description: Multiple imputes variables according to a hierarchical model sequentially. MORE FOLLOWS.
 BugReports: http://github.com/matthiasspeidel/hmi/issues
 Imports:
+    boot (>= 1.3-18),
     coda (>= 0.18-1),
     lme4 (>= 1.1-12),
     MASS (>= 7.3-45),
+    Matrix (>= 1.2),
     MCMCglmm (>= 2.22.1),
     mice (>= 2.25),
     mvtnorm (>= 1.0-5),
     pbivnorm (>= 0.6.0),
-    stats,
+    stats (>= 3.0.0),
     tmvtnorm (>= 1.4-10),
-    tree (>= 1.0-37)
+    tree (>= 1.0-37),
+    utils,
+    Rcpp
 Suggests:
-    boot (>= 1.3-18),
     knitr,
     rmarkdown
-Depends: R (>= 3.3.1)
+Depends: R (>= 3.0.0)
 License: GPL-3
 LazyData: TRUE
 RoxygenNote: 5.0.1

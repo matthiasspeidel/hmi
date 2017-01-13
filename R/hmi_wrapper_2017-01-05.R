@@ -104,7 +104,7 @@ hmi <- function(data, model_formula = NULL,
                      paste(fe$target_varname[!fe$target_varname %in% names(my_data)],
                            collapse = " and "),
                      "in your data. How do you want to proceed: \n
-                     [c]ontinue with ignoring the model_formula an running a single level imputation
+                     [c]ontinue with ignoring the model_formula and running a single level imputation
                      or [e]xiting the imputation?"))
 
     proceed <- readline("Type 'c' or 'e' into the console and press [enter]: ")
@@ -280,7 +280,7 @@ How do you want to proceed: \n
   if(any(categorical)){
     for(catcount in 1:sum(categorical)){
       print(paste("We interprete", names(my_data)[categorical][catcount],
-                  "as the categorical variable and force it to be a factor."))
+                  "as a categorical variable and force it to be a factor."))
       my_data[, names(my_data)[categorical][catcount]] <-
         as.factor(my_data[, names(my_data)[categorical][catcount]])
 
@@ -458,7 +458,7 @@ How do you want to proceed: \n
              tmp_variable == fe$target_varname ||
              ncol(tmp_Z) == 0){
 
-            imp <- imp_count_single(y_imp_multi = my_data[, 1],
+            imp <- imp_count_single(y_imp_multi = my_data[, tmp_variable],
                               X_imp_multi = tmp_X)
 
           }else{
@@ -534,7 +534,8 @@ How do you want to proceed: \n
 
         to_evaluate <- imp[is.na(data[, tmp_variable]), ]
 
-        if(tmp_type == "categorical" | tmp_type == "ordered_categorical"){
+        if(tmp_type == "binary" |
+           tmp_type == "categorical" | tmp_type == "ordered_categorical"){
 
           to_evaluate_numerical <- as.numeric(as.factor(my_data[, tmp_variable]))
 

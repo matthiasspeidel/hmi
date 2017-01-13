@@ -70,7 +70,7 @@ imp_count_single <- function(y_imp_multi,
   lambda <- exp(stats::rnorm(n, X_model_matrix_2 %*% fix.eff.imp, sigma.y.imp))
 
   y_imp <- ifelse(is.na(y_imp_multi), stats::rpois(n, lambda), y_imp_multi)
-
+  y_imp <- as.matrix(y_imp, ncol = 1)
 
   # --------- returning the imputed data --------------
   return(y_imp)
