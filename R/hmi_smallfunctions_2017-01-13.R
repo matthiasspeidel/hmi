@@ -121,6 +121,31 @@ get_type <- function(variable){
   }
 }
 
+#' Helps the user to make a list of types.
+#'
+#' In \code{hmi} the user can add a list of types. This function gives him a framework
+#' with suggestions. Of course he can changes on his own afterwards.
+#' For example, if a continouos variable as only two observations left, then get_type
+#' interprete this as a binary variable and not a continouos.
+#' @param data the data.frame also passed to \code{hmi}.
+#' @return a list with suggested types. Each list element has the name of a variable
+#' in the data.frame. The elements contain a single character denoting the type of the variable.
+#' See \code{get_type} for details about the variable types.
+#' @export
+list_of_types_maker <- function(data){
+
+  if(!is.data.frame(data)) stop("We need the data in the data.frame format!")
+  # set up empty list
+  ret <- list()
+  for(j in 1:ncol(data)){
+    # get and save the type
+    ret[[j]] <- get_type(data[, j])
+  }
+
+  # name the list elements according to the variable names of the data.frame
+  names(ret) <- colnames(data)
+  return(ret)
+}
 
 
 #' Averages the results of the imputation function \code{hmi}.
