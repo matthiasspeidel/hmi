@@ -7,6 +7,14 @@
 imp_binary_single <- function(y_imp_multi,
                       X_imp_multi){
 
+  # If one category has less then two observations, no binary model can be estimated.
+  # So the imputation routines has to stop.
+  if(min(table(y_imp_multi)) < 2){
+    stop("A binary (or maybe a semicontinouos) variable has less than two observations in one category.
+         Consider removing this variable
+         (or in the case of a semicontinouos variable, to specify it as continouos in the list_of_types).")
+  }
+
   #Initialising the returning vector
   y_imp <- data.frame(y_imp_multi)
 

@@ -105,6 +105,12 @@ hmi <- function(data, model_formula = NULL,
               We strongly suggest to remove those observations.")
   }
 
+
+  if(any(apply(my_data, 2, function(x) all(is.na(x))))){
+    warning("Some variables have a missing values in every observation.
+            Remove those variables from your data.frame (e.g. by setting them to NULL).")
+  }
+
   #get missing rates
   missing_rates <- apply(my_data, 2, function(x) sum(is.na(x)))/nrow(my_data)
 
@@ -391,14 +397,15 @@ How do you want to proceed: \n
         }
 
 
+        # if too few observations are left for a usefull imputation,
+        # the function stops
+        if(sum(!is.na(my_data[, tmp_variable])) <= 2){
+          stop(paste("Too few observations left in variable", tmp_variable))
+        }
 
         if(tmp_type == "binary"){
 
-          # if too few observations are left for a logistic regression,
-          # the function stops
-          if(sum(table(my_data[, tmp_variable])) <= 2){
-            stop(paste("Too few observations left in your binary variable", tmp_variable))
-          }
+
 
           #check whether a single level or multilevel imputation should be run
           # the standard is basically a multilevel imputation, but if one (or more) of the following

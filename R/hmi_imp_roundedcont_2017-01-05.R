@@ -133,9 +133,37 @@ imp_roundedcont <- function(y_imp_multi, X_imp_multi,
   # estimation of the starting values for eta and the thresholds on the x-axis:
   # ordered probit maximum possible rounding on the rounded in income data
 
-  probitstart <- MASS::polr(p[!missind] ~ inc.std[!missind],
-                      contrasts = NULL, Hess = TRUE, model = TRUE,
-                      method = "probit")
+
+  tryCatch(
+    {
+
+      probitstart <- MASS::polr(p[!missind] ~ inc.std[!missind],
+                                contrasts = NULL, Hess = TRUE, model = TRUE,
+                                method = "probit")
+
+    },
+    error=function(cond) {
+      message("We assume that perfect separation occured in your rounded continouos variable,
+              because of too few observations.
+              Consider specifying the variable to be continouos via list_of_types.")
+      message("Here's the original error message:")
+      message(cond)
+
+      return(NULL)
+    },
+    warning=function(cond) {
+      message("We assume that perfect separation occured in your rounded continouos variable,
+              because of too few observations.
+              Consider specifying the variable to be continouos via list_of_types.")
+      message("Here's the original warning message:")
+      message(cond)
+
+      return(NULL)
+    },
+    finally={
+
+    }
+  )
 
   gammastart <- as.vector(probitstart$coefficients) # the fix effect(s)
   kstart <- as.vector(probitstart$zeta) # the tresholds (in the summary labeled "Intercepts")
@@ -143,7 +171,8 @@ imp_roundedcont <- function(y_imp_multi, X_imp_multi,
   #0 (rounding degree 1), 0|1 (reounding degree 5),  1|2 (10),  2|3 (50),  3|4 (100),   4|5 (500),   5|6 (1000)
 
 
-  lmstart2 <- stats::lm(log.inc.std[!missind] ~ 0 + ., data = MM_1[!missind, , drop = FALSE])
+  blob <- sample_imp(log.inc.std)
+  lmstart2 <- stats::lm(blob ~ 0 + ., data = MM_1)
   betastart2 <- as.vector(lmstart2$coef)
   sigmastart2 <- summary(lmstart2)$sigma
 
@@ -187,7 +216,7 @@ imp_roundedcont <- function(y_imp_multi, X_imp_multi,
   # nearPD(hess)$mat
   # isSymmetric(Sigma_ml2)
 
-  Sigma_ml2 <- diag(diag(solve(Matrix::nearPD(hess)$mat), ncol = ncol(hess)))
+  Sigma_ml2 <- diag(diag(solve(Matrix::nearPD(hess)$mat)))
 
   ###set starting values equal to the observed income
   ###rounded income will be replaced by imputations later

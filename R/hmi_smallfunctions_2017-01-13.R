@@ -12,6 +12,7 @@
 #' @export
 sample_imp <- function(variable){
 
+  if(all(is.na(variable))) stop("Variable consists only of NAs.")
   ret <- variable
   ret[is.na(ret)] <- sample(size = sum(is.na(variable)),
                              variable[!is.na(variable)], replace = TRUE)
