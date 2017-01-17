@@ -157,7 +157,8 @@ list_of_types_maker <- function(data){
 #' variance is calculated for these parameters.
 #' @param mids A \code{mids} (multiple imputed data set) object.
 #' Either from the \code{hmi} imputation function or \code{mice}.
-#' @param analysis_function A user generated function that he is interested in. See examples.
+#' @param analysis_function A user generated function that contains the model and the model parameters
+#' he is interested in. See examples.
 #' @return A vector with all averaged results.
 #' @examples
 #' my.formula <- Reaction ~ Days + (1 + Days|Subject)

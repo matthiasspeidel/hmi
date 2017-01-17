@@ -411,11 +411,16 @@ How do you want to proceed: \n
           # the standard is basically a multilevel imputation, but if one (or more) of the following
           # conditions is met, a single level impuation is run:
           # 1. there was no cluster ID found by the extract_varnames function
-          # 2. the cluster ID cannot be found in the data
+          # 2. the cluster ID cannot be found in the data.
           # 3. the variable to impute is the cluster ID.
-          # 4. tmp_Z is currently empty (because the only random effects variable is going to be imputed)
+          # 4. tmp_Z is currently empty
+          # Explanation for 1 and 2: Without an cluster ID in the formula or the data, no multilevel model.
+          # Explanation for 3: multilevel models say that the influence of the covariates changes from cluster to cluster
+          # so cluster IDs are part of the covariates and not the target variable.
+          # Explanation for 4: It can happen that the only random effects variable is going to be imputed,
+          # resulting in an empty tmp_Z. But without random effects variables, no random effects model.
           if(fe$clID_varname == "" || !(fe$clID_varname %in% names(my_data)) ||
-             tmp_variable == fe$target_varname ||
+            # tmp_variable == fe$target_varname ||
              ncol(tmp_Z) == 0){
 
             imp <- imp_binary_single(y_imp_multi = my_data[, tmp_variable],
@@ -437,7 +442,7 @@ How do you want to proceed: \n
         if(tmp_type == "cont"){
 
           if(fe$clID_varname == "" || !(fe$clID_varname %in% names(my_data)) ||
-             tmp_variable == fe$target_varname ||
+#             tmp_variable == fe$target_varname ||
              ncol(tmp_Z) == 0){
 
 
@@ -463,7 +468,7 @@ How do you want to proceed: \n
 
 
           if(fe$clID_varname == "" || !(fe$clID_varname %in% names(my_data)) ||
-             tmp_variable == fe$target_varname ||
+#             tmp_variable == fe$target_varname ||
              ncol(tmp_Z) == 0){
 
             imp <- imp_semicont_single(y_imp_multi = my_data[, tmp_variable],
@@ -502,7 +507,7 @@ How do you want to proceed: \n
         if(tmp_type == "count"){
 
           if(fe$clID_varname == "" || !(fe$clID_varname %in% names(my_data)) ||
-             tmp_variable == fe$target_varname ||
+#             tmp_variable == fe$target_varname ||
              ncol(tmp_Z) == 0){
 
             imp <- imp_count_single(y_imp_multi = my_data[, tmp_variable],
@@ -526,7 +531,7 @@ How do you want to proceed: \n
         if(tmp_type == "categorical"){
 
           if(fe$clID_varname == "" || !(fe$clID_varname %in% names(my_data)) ||
-             tmp_variable == fe$target_varname || tmp_variable == fe$clID_varname ||
+#             tmp_variable == fe$target_varname ||
              ncol(tmp_Z) == 0){
 
             imp <- imp_cat_single(y_imp_multi = my_data[, tmp_variable],
@@ -549,7 +554,7 @@ How do you want to proceed: \n
         if(tmp_type == "ordered_categorical"){
 
           if(fe$clID_varname == "" || !(fe$clID_varname %in% names(my_data)) ||
-             tmp_variable == fe$target_varname ||
+ #            tmp_variable == fe$target_varname ||
              ncol(tmp_Z) == 0){
 
             imp <- imp_orderedcat_single(y_imp_multi = my_data[, tmp_variable],
