@@ -27,8 +27,12 @@ imp_cont_single <- function(y_imp_multi,
     apply(X_imp_multi[, categorical, drop = FALSE], 2, function(x) nlevels(factor(x))) > 10]
   X_imp_multi <- X_imp_multi[, !names(X_imp_multi) %in% too_many_levels, drop = FALSE]
 
+  # remove variables with just one observation
+  is_constant <- apply(X_imp_multi, 2, function(x) length(unique(x)) <= 1)
+  X_imp_multi <- X_imp_multi[, !is_constant, drop = FALSE]
 
   n <- length(y_imp_multi)
+
   lmstart <- stats::lm(stats::rnorm(n) ~ 0 +., data = X_imp_multi)
 
   X_model_matrix_1 <- stats::model.matrix(lmstart)

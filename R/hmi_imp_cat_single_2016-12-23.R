@@ -10,6 +10,11 @@
 #' @return A n x 1 data.frame
 imp_cat_single <- function(y_imp_multi,
                          X_imp_multi){
+
+  if(min(table(y_imp_multi)) < 2) {
+    stop("Too few observations per category in a categorical variable.")
+  }
+
   #Initialising the returning vector
   y_imp <- as.matrix(y_imp_multi, ncol = 1)
 
