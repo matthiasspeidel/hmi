@@ -87,11 +87,6 @@ hmi <- function(data, model_formula = NULL,
 
   }
 
-
-
-
-
-
   my_data <- data
 
   if(is.matrix(my_data)) stop("We need your data in a data.frame (and not a matrix).")
@@ -119,6 +114,23 @@ hmi <- function(data, model_formula = NULL,
   #get variables with missings
   incomplete_variables <- names(my_data)[missing_rates > 0]
 
+  if(any(missing_rates > 0.9)){
+    many_NAs <- names(my_data)[missing_rates > 0.9]
+
+    writeLines(paste("The variable(s) >>",
+                     paste(many_NAs, collapse = " and "),
+"<< have missing rates above 90%.
+This can result in instable imputation results for this variable
+and later in failing imputation routines for other variables (like count variables).
+How do you want to proceed: \n
+                     [c]ontinue using these variables
+                     or [e]xiting the imputation?"))
+
+    proceed <- readline("Type 'c' or 'e' into the console and press [enter]: ")
+    if(proceed == "e") return(NULL)
+
+  }
+
   # # # # # # # # # # #  get the formula elements (fe) and do consistency checks  # # # # # # # # # # # # # # # #
   constant_variables <- apply(my_data, 2, function(x) length(unique(x)) == 1)
 
@@ -136,10 +148,10 @@ hmi <- function(data, model_formula = NULL,
 
   #check if this variable name realy occurs in the dataset
   if(all(fe$target_varname != "") & !all(fe$target_varname %in% names(my_data))){
-    writeLines(paste("We didn't find",
+    writeLines(paste("We didn't find >>",
                      paste(fe$target_varname[!fe$target_varname %in% names(my_data)],
                            collapse = " and "),
-                     "in your data. How do you want to proceed: \n
+                     "<< in your data. How do you want to proceed: \n
                      [c]ontinue with ignoring the model_formula and running a single level imputation
                      or [e]xiting the imputation?"))
 
@@ -155,10 +167,10 @@ hmi <- function(data, model_formula = NULL,
 
   #check if this variable name realy occurs in the dataset
   if(all(fe$fixedeffects_varname != "") & !all(fe$fixedeffects_varname %in% names(my_data))){
-    writeLines(paste("We didn't find",
+    writeLines(paste("We didn't find >>",
                   paste(fe$fixedeffects_varname[!fe$fixedeffects_varname %in% names(my_data)],
                         collapse = " and "),
-                  "in your data. How do you want to proceed: \n
+                  "<< in your data. How do you want to proceed: \n
 [c]ontinue with ignoring the model_formula an running a single level imputation
 or [e]xiting the imputation?"))
 
@@ -175,10 +187,10 @@ or [e]xiting the imputation?"))
   #check if this variable name realy occurs in the dataset
   if(all(fe$randomeffects_varname != "") & !all(fe$randomeffects_varname %in% names(my_data))){
 
-    writeLines(paste("We didn't find",
+    writeLines(paste("We didn't find >>",
                      paste(fe$randomeffects_varname[!fe$randomeffects_varname %in% names(my_data)],
                            collapse = " and "),
-                     "in your data. How do you want to proceed: \n
+                     "<<in your data. How do you want to proceed: \n
                      [c]ontinue with ignoring the model_formula an running a single level imputation
                      or [e]xiting the imputation?"))
 
@@ -445,7 +457,6 @@ How do you want to proceed: \n
 #             tmp_variable == fe$target_varname ||
              ncol(tmp_Z) == 0){
 
-
             imp <- imp_cont_single(y_imp_multi = my_data[, tmp_variable],
                                   X_imp_multi = tmp_X)
 
@@ -512,6 +523,7 @@ How do you want to proceed: \n
 
             imp <- imp_count_single(y_imp_multi = my_data[, tmp_variable],
                               X_imp_multi = tmp_X)
+
 
           }else{
 

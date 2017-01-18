@@ -143,18 +143,18 @@ imp_roundedcont <- function(y_imp_multi, X_imp_multi,
 
     },
     error=function(cond) {
-      message("We assume that perfect separation occured in your rounded continouos variable,
+      message("We assume that perfect separation occured in your rounded continuous variable,
               because of too few observations.
-              Consider specifying the variable to be continouos via list_of_types.")
+              Consider specifying the variable to be continuous via list_of_types (see ?hmi).")
       message("Here's the original error message:")
       message(cond)
 
       return(NULL)
     },
     warning=function(cond) {
-      message("We assume that perfect separation occured in your rounded continouos variable,
+      message("We assume that perfect separation occured in your rounded continuous variable,
               because of too few observations.
-              Consider specifying the variable to be continouos via list_of_types.")
+              Consider specifying the variable to be continuous via list_of_types (see ?hmi).")
       message("Here's the original warning message:")
       message(cond)
 
@@ -188,19 +188,24 @@ imp_roundedcont <- function(y_imp_multi, X_imp_multi,
     return(ret)
   }
 
+
+  starting_values <- c(kstart, betastart2, gammastart, sigmastart2)
+
   ###exclude obs below (above) the 0.5% (99.5%) income quantile before maximizing
   ###the likelihood. Reason: Some extrem outliers cause problems during the
   ###maximization
 
   quants <- stats::quantile(y_imp_multi, c(0.005, 0.995), na.rm = TRUE)
-  outliers <- which(y_imp_multi < quants[1] | y_imp_multi > quants[2])
 
-  starting_values <- c(kstart, betastart2, gammastart, sigmastart2)
+  # in X and y_in_negloglik only those observations that are no outliers shall be included.
+  # Observations with a missing Y are to be included as well even if they could be an outlier.
+  # Therefore w
+  keep <- (y_imp_multi >= quants[1] & y_imp_multi <= quants[2]) | is.na(y_imp_multi)
 
   negloglik2_generated <- function_generator(para = starting_values,
-                                             X = MM_1[-outliers, , drop = FALSE],
-                                             y_in_negloglik = y_imp_multi[-outliers],
-                                             my_p = as.numeric(as.character(p[-outliers])),
+                                             X = MM_1[keep, , drop = FALSE],
+                                             y_in_negloglik = y_imp_multi[keep],
+                                             my_p = as.numeric(as.character(p[keep])),
                                              mean.log.inc = mean.log.inc,
                                              sd.log.inc = sd.log.inc)
 

@@ -20,7 +20,7 @@ imp_count_single <- function(y_imp_multi,
   # -------------- calling the gibbs sampler to get imputation parameters----
 
 
-  n <- length(y_imp_multi)
+  #n <- length(y_imp_multi)
   lmstart <- stats::lm(stats::rnorm(n) ~ 0 +., data = X_imp_multi)
 
   X_model_matrix_1 <- stats::model.matrix(lmstart)
@@ -69,8 +69,15 @@ imp_count_single <- function(y_imp_multi,
 
   lambda <- exp(stats::rnorm(n, X_model_matrix_2 %*% fix.eff.imp, sigma.y.imp))
 
+  # note: the maximum lambda is something about 2.14e9
+  if(max(lambda) > 2.14e9) {
+    stop("Imputation of count variable failed due to a too high value of lambda.
+This can occur if an observation in your data is an outlier regarding the covariates of the imputation model.
+What again can be caused by highly variant imputation models for these covariates due high missing rates.")
+  }
   y_imp <- ifelse(is.na(y_imp_multi), stats::rpois(n, lambda), y_imp_multi)
   y_imp <- as.matrix(y_imp, ncol = 1)
+
 
   # --------- returning the imputed data --------------
   return(y_imp)
