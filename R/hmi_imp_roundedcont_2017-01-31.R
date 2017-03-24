@@ -35,7 +35,7 @@ imp_roundedcont <- function(y_imp_multi, X_imp_multi,
   X_imp_multi_stand[, need_stand] <- scale(X_imp_multi[, need_stand])
 
   # blob has to be numeric, so it must only consists of precise observations
-  decomposed <- decompose.interval(interval = y_imp_multi)
+  decomposed <- decompose_interval(interval = y_imp_multi)
 
   if(any(decomposed$lower > decomposed$upper, na.rm = TRUE)){
     stop("in your interval covariate, some values in the lower bound exceed the upper bound.")
@@ -100,8 +100,8 @@ imp_roundedcont <- function(y_imp_multi, X_imp_multi,
   sd_y_precise <- stats::sd(y_precise, na.rm = TRUE)
 
   y_imp_multi_std <- (y_imp_multi - mean_y_precise)/sd_y_precise
-  if(is.interval(y_imp_multi_std)){
-    y_imp_multi_std <- decompose.interval(y_imp_multi_std)$precise
+  if(is_interval(y_imp_multi_std)){
+    y_imp_multi_std <- decompose_interval(y_imp_multi_std)$precise
   }
 
   # --preparing the ml estimation
@@ -180,7 +180,7 @@ imp_roundedcont <- function(y_imp_multi, X_imp_multi,
   #0 (rounding degree 1), 0|1 (reounding degree 5),  1|2 (10),  2|3 (50),  3|4 (100),   4|5 (500),   5|6 (1000)
 
 
-  blob <- sample_imp(decompose.interval(y_imp_multi_std)$precise)
+  blob <- sample_imp(decompose_interval(y_imp_multi_std)$precise)
   lmstart2 <- stats::lm(blob ~ 0 + ., data = MM_1) # it might be more practical to run the model
   #only based on the observed data, but this could cause some covariates in betastart2 to be dropped
   betastart2 <- as.vector(lmstart2$coef)
@@ -245,7 +245,7 @@ imp_roundedcont <- function(y_imp_multi, X_imp_multi,
 
   ###set starting values equal to the observed income
   ###rounded income will be replaced by imputations later
- 	y_std_tmp <- decompose.interval(y_imp_multi_std)$precise
+ 	y_std_tmp <- decompose_interval(y_imp_multi_std)$precise
 
  	y_imp <- array(NA, dim = c(n, M))
  	imp_tmp <- y_precise_template

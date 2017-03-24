@@ -35,7 +35,7 @@ imp_interval <- function(y_imp_multi, X_imp_multi, M){
   X_imp_multi_stand[, need_stand] <- scale(X_imp_multi[, need_stand])
 
   # blob has to be numeric, so it must only consists of precise observations
-  decomposed <- decompose.interval(interval = y_imp_multi)
+  decomposed <- decompose_interval(interval = y_imp_multi)
 
   if(any(decomposed$lower > decomposed$upper, na.rm = TRUE)){
     stop("in your interval covariate, some values in the lower bound exceed the upper bound.")
@@ -110,7 +110,6 @@ imp_interval <- function(y_imp_multi, X_imp_multi, M){
   #####maximum likelihood estimation using starting values
   ####estimation of the parameters
 
-  #blob <- sample_imp(decompose.interval(y_imp_multi_std)$precise)
   lmstart2 <- stats::lm(blob ~ 0 + ., data = MM_1) # it might be more practical to run the model
   #only based on the observed data, but this could cause some covariates in betastart2 to be dropped
   betastart2 <- as.vector(lmstart2$coef)
@@ -169,7 +168,6 @@ imp_interval <- function(y_imp_multi, X_imp_multi, M){
 
   ###set starting values equal to the observed income
   ###rounded income will be replaced by imputations later
-  #y_std_tmp <- decompose.interval(y_imp_multi_std)$precise
 
   y_imp <- array(NA, dim = c(n, M))
   imp_tmp <- y_precise_template

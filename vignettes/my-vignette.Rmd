@@ -1,0 +1,405 @@
+---
+title: "hmi: hierarchical multiple imputation"
+author: 
+- name: "Matthias Speidel"
+- name: "Jörg Drechsler"
+- name: "Shahab Jolani"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{hmi: hierarchical multiple imputationVignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+---
+references:
+- id: Drechsler2015
+  title: 'MI Double Feature: Multiple Imputation to Address Nonresponse and Rounding Errors in Income Questions'
+  author:
+  - family: Drechsler
+    given: Jörg
+  - family: Kiesl
+    given: Hans
+  - family: Speidel
+    given: Matthias
+  container-title: Austrian Journal of Statistics
+  volume: 44
+  URL: 'http://www.ajs.or.at/index.php/ajs/article/view/vol44-2-5'
+  DOI:  10.17713/ajs.v44i2.77
+  issue: 2
+  publisher: 
+  page: 
+  type: article-journal
+  issued:
+    year: 2015
+    month: 
+
+- id: Hadfield2010
+  title: 'MCMC Methods for Multi-Response Generalized Linear Mixed Models: The MCMCglmm R Package'
+  author:
+  - family: Hadfield
+    given: Jarrod D.
+  container-title: Journal of Statistical Software
+  volume: 44
+  URL: 'https://www.jstatsoft.org/article/view/v033i02'
+  DOI: 10.18637/jss.v033.i02
+  issue: 2
+  publisher: 
+  page: 
+  type: article-journal
+  issued:
+    year: 2010
+    month: 2
+
+- id: Rubin1987
+  title: 'Multiple Imputation for Nonresponse in Surveys'
+  author:
+  - family: Rubin
+    given: Donald
+  container-title: 
+  volume: 
+  URL: 
+  DOI: 10.1002/9780470316696
+  issue: 
+  publisher: John Wiley \& Sons, Inc.
+  page: 
+  type: book
+  issued:
+    year: 1987
+    month: 
+
+- id: Wiencierz2012
+  title: 'linLIR: linear Likelihood-based Imprecise Regression'
+  author:
+  - family: Wiencierz
+    given: Andrea
+  container-title: 
+  volume: 
+  URL: 'https://cran.r-project.org/web/packages/linLIR/index.html' 
+  DOI: 
+  issue: 
+  publisher: CRAN
+  page: 
+  type: article-journal
+  issued:
+    year: 2012
+    month:
+---
+
+
+## Purpose of package
+The hmi package allows user to run single level and multilevel imputation models.
+The big additional benefit of this package is the user-friendliness. 
+It is designed for researchers, experienced in running single und multilevel analysis models, but not in writing own multilevel imputation routines.
+
+The user just has to pass the data to the main function and, optionally, his analysis model.
+Basically the package then translates this analysis model into commands to impute the data according to it with functions from `mice`, `MCMCglmm` or routines build for this package.
+
+## Basic functionality
+
+The main function that wraps up all sub functions is `hmi`. 
+
+In the most simple case, the user just passes his `data` to `hmi`. In this case all variables with missing values are imputed based on a single level imputation model including the other variables. 
+The situation, for which the package was build for, is that the user additionally passes his analysis model as `model_formula` to `hmi` (and defines more details if he wants to).
+The function then analyses the `model_formula`, checks whether it suits to the data given and runs some other checks on the data given (size of the data, number of remaining observations etc.). 
+
+### Sequential regression imputation
+Principally there are two strategies to impute missing data. One is the *joint modeling* approach. It assumes a joint distribution of the variables and draws values based on this distribution. For this package we see this approach not to be suitable and therefor choose the *sequential regression* approach. It imputes variables step by step until convergence.
+
+As a starting point, all variables with missing values are imputed by samples of observed values in this variable. After this is done, `hmi` starts with the actual, adequate imputation: the first variable with missing values is selected and imputed based on the other variables with an imputation model congenial to the `model_formula`. Dependent on the situation this can either be a single level or a multilevel model. As different classes of variables require different classes of imputation routines, `hmi` also determines which type the variable is of (continuous, binary etc. all supported types are listed below).
+
+Then the next incomplete variable is imputed based on this firstly imputed variable and the other (yet only sample-imputed) variables. Then the third, forth, ... incomplete variable is imputed.
+The process of imputing all incomplete variables once is called a *cycle*. Now, a next cycle can begin, imputing the first variable again, but this time based on the other variables which now (once) have been imputed adequately. After `maxit` cycles, the current state of the variables is stored, building one imputation. Then the process starts again, until `M` imputed data sets are present.
+
+### Output of `hmi`
+The package is build to be compatible with `mice`; especially with regard the output. `hmi` returns, like `mice`, a so called `mids`-object (multiple imputed data set).
+
+This allows user, familiar with `mice` to use functions designed for `mice`-outputs without switching barriers. For example, running the generic `plot()`-function on a `mids`-object calls the function `plot.mids` showing the means and variances of the imputed variables over the different imputations, regardless whether the `mids`-object came from `mice` or `hmi`. Or he could call the `complete`-function delivered by `mice` to get a completed data set where the NAs are replaced by the imputed values.
+
+## The different types of imputation routines / the supported types of variables
+Different variable types require different imputation routines. For example for binary variables it would be unpleasant to imputed other values than `0` and `1`. And factor variables with levels `"A"`, `"B"` and `"C"` need an imputation routine different to the ones for binary and continuous variables.
+
+To determine which imputation routine shall be used, we first have to decide whether a single level or multilevel model shall be used. This decision is mainly based on the `model_formula` given by the user. The formula is decomposed into its fixed effects, random effects and cluster variable parts (if present). If the cluster variable and the random effect variables are actually present in the data set and available in the moment of imputation, a multilevel model is run. In all other cases (i.e. not available or not specified) a single level model is run.
+
+The second question is which type the variable is of. We distinguish eight different types of variable. The next sections describe how we assign a type to a variable and how the imputation model works for these types. For some special cases the rules of assignment might give unwanted results. Therefore the user can specify the types of the variables in advance by setting up a `list_of_types`. Section *Pre-definition of the variable types* explains how this is done.
+
+`MCMCglmm` assumes for each type of variable, that there is a latent variable $l$ present which can be expressed by fix and random effects. So $l = X \cdot \beta + Z \cdot u + \varepsilon$ [cf. @Hadfield2010 eq. 3]. The probability of observing $y_i$ is conditioned on $l_i$: $f_i(y_i|l_i)$, with $f_i$ being the probability density function (pdf) for $y_i$. More about the theory behind `MCMCglmm` can be found in the below.
+
+For completeness: each imputation routine starts with some cleanup. This includes for example removing linear dependent variables (or other variables likely to hamper the imputation model like factors with more then 10 levels) from the current imputation.
+
+### Binary variables (keyword `"binary"`)
+Data are considered to be binary if there are only two unique values. This includes for example `0` and `1` or `"m"` and `"f"`. 
+
+The single level imputation model is a logistic regression for a binomial family with a logit link. Based on this model new (Bayesian) imputation parameters are drawn. Those parameters are then used to sample binary observations, given the other covariates. This is implemented in the `mice.impute.logreg`-function which is called when running `mice` with the `method = "logreg"`.
+
+In the multilevel model `MCMCglmm` is called with `family = categorical`. This uses the pdf $\exp(l)/(1+\exp(l))$
+
+Settings where our rule of classification might fail are small data, or data with very few observed individuals or if a third possible category is unobserved. E.g. in a small health survey it could happen that non of the respondents reported to have had two (or more) Bypass operations. So here a count variable would falsely be classified as binary.
+
+
+### continuous variables (keyword `"cont"`)
+Any numeric vector, that isn't one of the other types, is considered to be continuous.
+
+In the single level model, `mice.impute.norm` from `mice` is called. This routine first draws imputation parameters (regression coefficients and residual variance) and then draws imputation values with these parameters. 
+
+In the multilevel model `MCMCglmm` is called with `family = categorical`. This uses the normal distribution.
+
+### semicontinuous variables (keyword `"semicont"`)
+As "semicontinuous" we define continuous variable with more than 5\% values being 0. 
+
+The first step of imputing semicontinuous variables is to temporarily change internally all non-zero values to 1. Then via a binary imputation (based on the temporarily 0/1 variable) it is decided for the missing values whether they shall be 0 or non-zero. 
+
+In a third step, for those being chosen to be non-zero, we run a continuous imputation model based on the originally non-zero observations. (Missing values, chosen to be 0, don't need further treatment, their imputation values is just 0). 
+
+### rounded continuous variables (keyword `"roundedcont"`)
+If more than 50% of the data are divisible by 5, they are considered to be "rounded continous".
+For example the income in surveys is often reported rounded by the respondents.
+
+For this type of variable, we use our own imputation routine.
+
+It estimates a model for the rounding degree G and for the variable Y itself, then parameters for the joint distribution of G and Y are drawn and afterwards used to impute values. Not only missing values get a new imputed value, but also values with an interval response (e.g. "between 1500 and 2000") and (presumably) rounded responses.
+
+Individuals with NAs get imputed values drawn from the normal distribution with the estimated parameters from the joint distribution.
+Interval responses get imputed values drawn from the truncated normal distribution.
+For individuals with (presumably) rounded responses, values are drawn for G and Y and than checked whether this combination could explain the actual observed value of Y for this observation. E.g. if 2950 is observed then the combination (G = degree 100, Y = 3000) would not fit to the observed response. In the case of a mismatch, the process is repeated until G and Y match.
+
+The process is described in detail in [@Drechsler2015].
+
+### interval variables (keyword `"interval"`)
+We see interval data as a special case of imprecise observations given as an mathematical interval $[l;~u]$ with $l \leq u$. For example a person could report refuse to report its precise income $y$, but is willing to report that it is something between 1500 and 2000. In this case the interval $[1500; ~2000]$ is the observed value for this individual. Precise answers like $3217$ can be seen as special cases of interval data where $l=u$, here $[3217;~3217]$. Missing values can be seen as the extreme case $[-\infty;~\infty]$.
+
+To our knowledge, there is no standard in R for interval data. One possibility would be to generate *two* variables for the lower and the upper bounds of the data. Based on this approach [@Wiencierz2012] set up the `idf`-objects (interval data frame) in her package `linLAR`. We didn't follow this approach for our package, because it would need an inconvenient workflow to link both variables appriopriately. Instead we define a new class `interval` for interval variables. Interval variables actually come in *one* variable. Technically one observation in such an interval variable is `"l;u"` with `l` (resp. `u`) being a scalar with optional decimal places in American notation (with a full stop. E.g. `"1234.56;3000"`) or `-Inf` (resp. `Inf`).
+
+Within most `R` functions such a `interval`-variable will be treated as a factor. But it is a factor with maybe more then 100 categories. So we suggest not to use such a variable as covariate in a imputation model. Within `hmi` it would not be used as this would be too many categories. The main reason to use a `interval` variable is to impute this variable according to [@Drechsler2015].
+
+We also implemented functions to run basic calculations on interval data (`+`, `-`, '*' and `/`), to generate interval data based on two vectors (`as_interval`) or to split interval data up into their lower and upper bounds (`split_interval`).
+
+Furthermore we want to encourage people working with interval data or variables and hope that a standard for this will emerge. For this reason we think, users should be able to switch easily between `idf` and `interval` objects as one might be better for one task and the other for a different task. So we implemented `idf2interval` and `interval2idf` which conveys an object from one format to the other (as far as possible). 
+
+### count variables (keyword `"count"`)
+Every vector with integers (which is not semicontinous) is considered to be count data. By this definition, every continuous variable, rounded to the next integer is considered to be a count variable.
+
+For both, single level and multilevel settings, we use `MCMCglmm` with the poisson distribution for the latent variable.
+
+### categorical variables (keyword `"categorical"`)
+Factor-variables (or variables with more than two categories - if they are not one of the previous types) are considered to be categorical variables. 
+
+For the single level setting we use the `cart` approach in `mice`. This runs a regression tree for the observed data and then samples from suitable leaves for the individuals with missing values.
+
+In the multi level setting, we use the `categorical` setting in `MCMCglmm` with runs a multilevel regression model for each category (based on the observed individuals). For the individuals with missing values, probabilities for each category are be calculated and than a category sampled based on these probabilities.  
+
+### ordered categorical variables (keyword `"ordered_categorical"`)
+In the special case, that a factor variable is ordered, we treat it as *ordered categorical*.
+
+For the single level case `mice` is told to run an ordered logistic model.
+`MCMCglmm` for the multilevel setting runs the `ordinal` model.
+
+The assumption behind both models is that a latent variable $l$ is assumed to be present and dependent on how many thresholds $\gamma$, the variable exceeded, a higher category $k$ is observed.
+
+### Intercept variable (keyword `"intercept"`)
+A constant variable (only one kind of observation) is considered to be a intercept variable. If you run a analysis model with a intercept variable (even if it is only implicit like in `y ~ x1 + x2`), your data set needs to have such an intercept variable. `hmi` is quite strict here and different to what you might expect.
+
+## pre-definition of the variable types 
+
+If you want to have manual control over the process which method is used for each variable, you can specify a `list_of_types`. This is a `list` where each list element has the name of a variable in the data frame. The elements has to contain a single character string denoting the type of the variable (the keywords from the previous section). With the function `list_of_types_maker`, the user can get the framework for this object.
+
+In most scenarios this is shouldn't be necessary. One example where it might be necessary is when only two observations of a continuous variable are left - because in this case `get_type` interpret this variable to be binary. Or if you want to impute rounded continuous variables not as `"count"`, but as `"cont"`.
+ 
+The example uses the data set `CO2` about the "Carbon Dioxide Uptake in Grass Plants", which comes along with `R`. If you run the common `str(CO2)`, you get the information that the variable `Plant` is an `Ord.factor w/ 12 levels`, `Type` is an `Factor w/ 2 levels`, `Treatment` is an `Factor w/ 2 levels`, `conc` is a `num` and so is `uptake`.
+
+`hmi` draws similar conclusions. A difference would be that we call Factors with 2 levels "binary". Also the variable `conc` would be considered to be a special case of a continuous variable - a rounded continuous, because every value of the ambient carbon dioxide concentration is divisible by at least 5.
+
+You can see in advance how variables will be treated internally by `hmi` if you call the `list_of_types_maker`. For example `example_list_of_types <- list_of_types_maker(CO2)` gives you the following list:
+
+```{r echo = FALSE}
+source('C:/Users/Matthias/Documents/hmi/R/hmi_smallfunctions_2017-02-21.R')
+example_list_of_types <- list_of_types_maker(CO2)
+example_list_of_types
+```
+
+Now you can modify `example_list_of_types` according to your preferences. For example if you want the variable `conc` to be continuous, you can write `example_list_of_types[["conc"]] <- "cont"`. If you finished your modification on `example_list_of_types`, pass this list to `hmi` via its parameter `list_of_types`. In our example it would be `hmi(data = CO2, list_of_types = example_list_of_types)`. (Note, that `CO2` doesn't contain any missing value, so there is no need for imputation.)
+
+
+## the theory behind `MCMCglmm`
+The `MCMCglmm` package is described in detail in [@Hadfield2010].
+
+He assumes for every observed *y* that a latent variable *l* is present. Based on this assumption each model consists of three parts.
+
+1. a link function. 
+2. a linear mixed model (with fixed and random effects) for *l*. It has to form $l = X\beta + Z u + \varepsilon$, with `X` being the fixed effects variables, `Z` than random effects variables. $\beta$ and $u$ are the fix and random regression parameters; $\varepsilon$ is the residual.
+3. a block diagonal covariance matrix including block matrices. Firstly $B$ for the prior covariances of the fixed effects $\beta$, secondly the random effects covariance matrix $G$ and thirdly the residual variance (matrix) $R$.
+
+The link function is defined by the type of variable that shall be imputed. Which variables define $X$ and $Z$ is automatically determined by `hmi` via the `model_formula` given by the user. 
+
+The most explanations probably need the covariance matrices. Hadfield predefines the priors to be inverse-wishart distributed. The choice left to the user, is to specifiy the parameters of the inverse-wishart distribution. It is allowed to specify parameters leading to improper priors.
+
+The product of likelihood and prior distribution gives the posterior distribution for the imputation parameters. `MCMCglmm` samples imputation parameters from the posterior and `hmi` draws imputation values based on these imputation parameters. This is done by *Markov Chain Monte Carlo* (MCMC) methods like *Metropolis-Hasting*, *Gibbs Sampling* and *Sclice Sampling* (see Hadfield'S [MCMCglmm Course Notes](https://cran.r-project.org/web/packages/MCMCglmm/vignettes/CourseNotes.pdf) for more details).
+
+### $B$
+We specify the inverse-wishart distribution to have an identity scale matrix and degrees of freedom of `nu = 0.002`. This leads to improper but useful priors.
+
+### $G$
+Regarding the random effects `MCMCglmm` allows different specifications for the structure of the random effects covariance matrix [@Hadfield2010, tab. 2]. We use `us()` to allow different correlation between the random effects. The second random effects issue to be specified for a `MCMCglmm` model is the prior for the covariance matrix. A convincing choice found in the `MCMCglmm` course notes is to define a $q \times q$ identity matrix with $q$ being the number of random effect variables and to set `nu = 0.002` which results in an inverse-gamma prior with scale and shape equal to 0.001.
+
+### $R$
+For the residuals in most cases, we use non-informative, but improper priors be setting `V = 1e-07` and `nu = -2`. In some cases, like logistic models, we have to fix the residual variance at `1`. 
+
+## how to use it
+
+### single level example
+
+To illustrate the use of `hmi`, we stick to the `CO2` data set; but as it has no missing values, we add those artificially:
+
+```{r echo = TRUE}
+example <- CO2
+set.seed(1)
+example[sample(1:nrow(CO2), size = 20), "uptake"] <- NA
+head(example) # e.g. in line 5 there is a NA now.
+```
+
+The most simple call of `hmi` would be be:
+
+```{r echo = FALSE, message = FALSE, cache = TRUE}
+library("mice")
+source('C:/Users/Matthias/Documents/hmi/R/hmi_wrapper_2017-02-05.R')
+source('C:/Users/Matthias/Documents/hmi/R/hmi_imp_cont_single_2017-01-18.R')
+```
+
+```{r eval = FALSE, message = FALSE, cache = TRUE}
+result <- hmi(example)
+```
+`result` is a `mids` (*multiple imputed data set*) object as it also is returned by `mice`. So the functionality of mice can be used. For example the arithmetic mean and standard deviation of the imputation values across the `M` imputations can be plotted. Here we have 10 different lines for each of the 10 imputations (in `hmi` the default value is `M = 10`). And each line consists of 5 points for each of the 5 iterations (in `hmi` the default value is `maxit = 5`).
+```{r eval = TRUE, results = "hide", message = FALSE, cache = TRUE}
+set.seed(1)
+result <- hmi(example)
+```
+
+```{r eval = TRUE, message = FALSE, cache = TRUE, fig.width = 8}
+plot(result, layout = c(2, 1))
+```
+The plots show no extreme results to cause worries. 
+
+Another useful tool from `mice` is the `complete` function. It gives you a data set with the original and imputed values. Here we show the first rows of the completed data set:
+
+```{r eval = TRUE, message = FALSE, cache = TRUE}
+head(complete(result, 1))
+```
+
+### multilevel example
+Let's move to a more elaborated imputation than just calling `hmi(example)`. A big part of the packages contribution is the multilevel imputation. For example, if your interest lies in modeling the effect of the carbon dioxide uptake rates (target variable `uptake`) by the ambient carbon dioxide concentration (explanatory variable `conc`) - and an intercept. Assuming that the effects of `conc` and the intercept on `uptake` can differ across the different plants (random effect variable `Plant`), your analysis model using `lmer` from the `lme4` package would be `lmer(uptake ~ 1 + conc + (1 + conc | Plant), data = example)`. Just for clarification how this model is read by `hmi`: the word left to `~` denotes the target variable, the parts right to `~` denote the fixed and random effects variables and the cluster ID. And in more detail, the parts within the parentheses left to `|` denote the random effects variables and the word right to `|` denotes the cluster ID.
+
+If you run this model, you will get results but also a warning about convergence:
+```{r eval = TRUE, message = TRUE, cache = TRUE}
+library("lme4")
+lmer(uptake ~ 1 + conc + (1 + conc | Plant), data = example)
+```
+
+As `lmer` suggests to rescale variables, we will rescale `conc`.
+```{r eval = TRUE, message = FALSE, cache = TRUE}
+library("lme4")
+example_2 <- example
+example_2$conc <- (example_2$conc - mean(example_2$conc))/sd(example_2$conc)
+mod <- lmer(uptake ~ 1 + conc + (1 + conc | Plant), data = example_2)
+```
+The coefficients can be interpreted as follows:
+```{r eval = TRUE, message = FALSE, cache = TRUE}
+fixef(mod)
+```
+The `uptake` of carbon dioxide at zero ambient carbon dioxide concentration is `27.12` units (micromole/m^2 sec). If now the ambient carbon dioxide concentration increases by one standard deviation, the expected `uptake` increases by `5.43` units.
+
+The estimated random effects covariance matrix can be obtained by
+```{r eval = TRUE, message = FALSE, cache = TRUE}
+vcov(mod)
+```
+It shows moderate variances and positively correlated ($\rho = 0.615$) random effects. So plants with a higher "baseline uptake" have (on average) also a higher concetration effect.
+
+If we would run again `hmi(example_2)` without further specification, we would end up in running a single level imputation. To make `hmi` run a multilevel imputation model, you have to specify a multilevel analysis model and this has two mandatory elements: 1. variables with a clusterspecific effect (*random effects variables*) and 2. a variable indicating the clusters. By passing your analysis model formula to `hmi` you implicitly specify your imputation model(s). If there are more variables with missing values, then the other variables are tried to be imputed with a similar model. This means that maybe only one covariate in the analysis model becomes the target variable in the imputation model, but the random effects variables and the cluster ID keep the same (except in the case a random effects variable is to be imputed. In this case this variable is dropped from the random effects part of the imputation model). So here a multilevel imputation would be set up by
+```{r eval = FALSE, message = FALSE, cache = TRUE}
+result_multi <- hmi(data = example_2, model_formula = uptake ~ 1 + conc + (1 + conc | Plant))
+```
+Here we get the message that "Intercept" was not found in the data and we can decide whether we want to stop the imputation routine or continue with a single level imputation. The reason for this message is the strict control in `hmi` whether your model and your data fit together. So if you are sure that you want to have a intercept variable in your model, include one into your data.
+
+```{r eval = FALSE, message = FALSE, cache = TRUE}
+example_2$Intercept <- 1
+result_multi <- hmi(data = example_2, model_formula = uptake ~ 1 + conc + (1 + conc |Plant))
+```
+
+```{r eval = TRUE, echo = FALSE, results = "hide", message = FALSE, cache = TRUE}
+source('C:/Users/Matthias/Documents/hmi/R/hmi_imp_cont_multi_2017-01-25.R')
+source('C:/Users/Matthias/Documents/hmi/R/hmi_smallfunctions_2017-02-21.R')
+example_2$Intercept <- 1
+result_multi <- hmi(data = example_2, model_formula = uptake ~ 1 + conc + (1 + conc |Plant))
+```
+
+Now the imputation is complete and with the resulting `mids`-object you could do all the things described in the section above. 
+
+Here we were especially interested in multilevel models, so we want to run our analysis model on the imputed data. By this it is meant that the model is run on every of the `M` completed data set and then the results are combined according to Rubin's combining rules [@Rubin1987].
+
+`mice` has the functions `fit` and `pool` to do this. But only certain parameters of your model are pooled. 
+```{r eval = TRUE, echo = TRUE, message = FALSE, cache = TRUE}
+pool(with(data = result_multi, expr = lmer(uptake ~ 1 + conc + (1 + conc |Plant))))
+```
+
+`hmi_pools` tries to give a flexible alternative to this function. The function needs two things
+
+1. your multiple imputed data sets (the `mids` object you created with `hmi`) 
+2. function that you have to define in advance. This has to be a function where you write what you want to do with a completed data set (in most cases this would be *run a specific model*, but it could be *take the mean of the third column*) and save all parameters you are interested in, in a list returned by the function. 
+
+In the following example runs a mixed model and extracts the fixed effects and the random effects covariance matrix:
+
+```{r eval = FALSE, echo = TRUE, message = FALSE, cache = TRUE}
+ my_analysis <- function(complete_data){
+  # In this list, you can write all the parameters you are interested in.
+  # Those will be averaged.
+  # So make sure that averaging makes sense and that you only put in single numeric values.
+  parameters_of_interest <- list()
+
+  # ---- write in the following lines, what you are interested in to do with your complete_data
+  # the following lines are an example where the analyst is interested in the fixed intercept
+  # and fixed slope and the random intercepts variance,
+  # the random slopes variance and their covariance
+  my_model <- lmer(uptake ~ 1 + conc + (1 + conc |Plant), data = complete_data)
+
+  parameters_of_interest[[1]] <- fixef(my_model)[1]
+  parameters_of_interest[[2]] <- fixef(my_model)[2]
+  parameters_of_interest[[3]] <- VarCorr(my_model)[[1]][1, 1]
+  parameters_of_interest[[4]] <- VarCorr(my_model)[[1]][1, 2]
+  parameters_of_interest[[5]] <- VarCorr(my_model)[[1]][2, 2]
+  names(parameters_of_interest) <- c("beta_0", "beta_1", "sigma0", "sigma01", "sigma1")
+
+  # ---- do not change this function below this line.
+  return(parameters_of_interest)
+ }
+
+hmi_pool(mids = result_multi, analysis_function = my_analysis)
+```
+```{r eval = TRUE, echo = FALSE, message = FALSE, cache = TRUE}
+source('C:/Users/Matthias/Documents/hmi/R/hmi_smallfunctions_2017-02-21.R')
+ my_analysis <- function(complete_data){
+  # In this list, you can write all the parameters you are interested in.
+  # Those will be averaged.
+  # So make sure that averaging makes sense and that you only put in single numeric values.
+  parameters_of_interest <- list()
+
+  # ---- write in the following lines, what you are interetest in to do with your complete_data
+  # the following lines are an example where the analyst is interested in the fixed intercept
+  # and fixed slope and the random intercepts variance,
+  # the random slopes variance and their covariance
+  my_model <- lmer(uptake ~ 1 + conc + (1 + conc |Plant), data = complete_data)
+
+  parameters_of_interest[[1]] <- fixef(my_model)[1]
+  parameters_of_interest[[2]] <- fixef(my_model)[2]
+  parameters_of_interest[[3]] <- VarCorr(my_model)[[1]][1, 1]
+  parameters_of_interest[[4]] <- VarCorr(my_model)[[1]][1, 2]
+  parameters_of_interest[[5]] <- VarCorr(my_model)[[1]][2, 2]
+  names(parameters_of_interest) <- c("beta_0", "beta_1", "sigma0", "sigma01", "sigma1")
+
+  # ---- do change this function below this line.
+  return(parameters_of_interest)
+ }
+
+hmi_pool(mids = result_multi, analysis_function = my_analysis)
+```
+
+# References
