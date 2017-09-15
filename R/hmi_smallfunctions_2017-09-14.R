@@ -32,7 +32,7 @@ sample_imp <- function(variable){
 #'  \item continuous (numeric values),
 #'  \item semicontinuous (numeric values with more than 5\% of them are 0),
 #'  \item rounded continuous (if continuous values are rounded to the closest multiple of 5, 10, 50, 100, 500 or 1000.
-#'  We see this to be the case if more than 50\% of the observations are divisable by 5)
+#'  We see this to be the case if more than 50\% of the observations are divisible by 5)
 #'  \item count data (if all values are integers).
 #'  \item an intercept (the same value for all observations),
 #'  \item binary (two different values - like 0s and 1s or "m" and "f"),
@@ -103,9 +103,9 @@ get_type <- function(variable){
         type <- "semicont"
       }
 
-      # if more than 50% of the data are divisable by 5, they are considered to be rounded
+      # if more than 50% of the data are divisible by 5, they are considered to be rounded
       # continous
-      # Observed 0s shall not be counted as being divisable by 5,
+      # Observed 0s shall not be counted as being divisible by 5,
       #because otherwise semi-continous variables might be considered to be rounded-continous.
 
       if((sum(variable %% 5 == 0, na.rm = TRUE) - sum(variable == 0, na.rm = TRUE))/
@@ -154,7 +154,7 @@ get_type <- function(variable){
 #' In \code{hmi} the user can add a list of types. This function gives him a framework
 #' with suggestions. Of course he can changes on his own afterwards.
 #' For example, if a continuous variable as only two observations left, then get_type
-#' interprete this as a binary variable and not a continuous.
+#' interpret this as a binary variable and not a continuous.
 #' @param data the data.frame also passed to \code{hmi}.
 #' @return a list with suggested types. Each list element has the name of a variable
 #' in the data.frame. The elements contain a single character denoting the type of the variable.
@@ -328,8 +328,8 @@ negloglik2 <- function(para, X, y_in_negloglik, lower = NA, upper = NA,
 
   # a1 are a7 the "components" of the log-liklihood contributions
   #
-  # If the income is not divisable by 5, only a1 is relevant
-  # if the income is divisable by 5, but not by 10, a1 + a2 are relevant
+  # If the income is not divisible by 5, only a1 is relevant
+  # if the income is divisible by 5, but not by 10, a1 + a2 are relevant
   # etc.
 
   #get the value of the standard bivariate normal cumulative density function
@@ -1219,7 +1219,7 @@ remove_excessives <- function(X, k = 10){
   types <- array(dim = ncol(X))
   for(j in 1:length(types)) types[j] <- get_type(X[, j])
 
-  # currently, R interpretes interval data as categorical.
+  # currently, R interprets interval data as categorical.
   # This can be unfeasible as there could be as many categories as observations.
   # Two practical approaches are 1. ignoring interval data. 2. splitting them up into
   # two separate variables. Currently we chose option 2.
@@ -1270,7 +1270,7 @@ remove_excessives <- function(X, k = 10){
 #' @param thin An integer defining the thinning interval (see \code{MCMCglmm}).
 #' @param burnin An integer defining the percentage of draws from the gibbs sampler
 #' that should be discarded as burn in (see \code{MCMCglmm}).
-#' @param mn An interger defining the minimum number of individuals per cluster.
+#' @param mn An integer defining the minimum number of individuals per cluster.
 #' @return A data.frame where the values, that have a missing value in the original
 #' dataset, are imputed.
 #' @export

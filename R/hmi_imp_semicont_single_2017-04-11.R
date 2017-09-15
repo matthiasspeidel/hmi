@@ -1,4 +1,4 @@
-#' The function for hierarchical imputation of semicontinous variables.
+#' The function for hierarchical imputation of semicontinuous variables.
 #'
 #' The function is called by the wrapper. We consider data to be "semicontinuous" when
 #' more than 5\% of the (non categorical) observations.\cr
