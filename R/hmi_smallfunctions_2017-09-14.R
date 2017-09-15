@@ -3,7 +3,7 @@
 #' Sample imputation.
 #'
 #' Function to sample values in a variable from other (observed) values in this variable.
-#' So this imputation doesn't use further covariates.
+#' So this imputation does not use further covariates.
 #' @param variable A vector of size \code{n} with missing values.
 #' @return A n times 1 data.frame without missing values.
 #' @examples
@@ -32,7 +32,7 @@ sample_imp <- function(variable){
 #'  \item continuous (numeric values),
 #'  \item semicontinuous (numeric values with more than 5\% of them are 0),
 #'  \item rounded continuous (if continuous values are rounded to the closest multiple of 5, 10, 50, 100, 500 or 1000.
-#'  We see this to be the case if more than 50\% of the observations are devisable by 5)
+#'  We see this to be the case if more than 50\% of the observations are divisable by 5)
 #'  \item count data (if all values are integers).
 #'  \item an intercept (the same value for all observations),
 #'  \item binary (two different values - like 0s and 1s or "m" and "f"),
@@ -470,7 +470,7 @@ contributions4intervals <- function(lower, upper, mymean, mysd){
 
 #' calculate probabilities from the cumulative distribution function of a standard bivariate normal distribution
 #'
-#' A modfied version of pbivnorm() from package \code{pbivnorm}.
+#' A modified version of pbivnorm() from package \code{pbivnorm}.
 #' It is needed in the imputation routine for rounded income.
 #' @param x the vector (or a two columned matrix) with the values of the first random variable
 #' @param y the vector with the values of the second random variable
@@ -506,7 +506,7 @@ pbivnormX <- function (x, y, rho = 0) {
 #' Function to get the likelihood contribution of different rounding degrees
 #'
 #' It is needed in the imputation routine for rounded income.
-#' See equation (5) in Drechsler, Kiesel & Speidel (2015)
+#' See equation (5) in Drechsler, Kiesl & Speidel (2015)
 #' @param ki An integer for the i-th threshold (or "cutpoint")
 #' @param kj An integer for the j-th threshold (or "cutpoint") (ki < kj)
 #' @param mean1_obs A vector with the expected value of G for the observed data
@@ -562,7 +562,7 @@ doubleintegral <- function(lower_inner, upper_inner, lower_outer, upper_outer,
 
 #' Function need to multivariate samples of a truncated multivariate normal distribution
 #'
-#' As rtmvnorm only alows one mean vector of one multivariate normal distribution,
+#' As rtmvnorm only allows one mean vector of one multivariate normal distribution,
 #' but we need different mean vectors for different multivariate normal distributions,
 #' we implement this function. This function in combination with \code{apply},
 #' allows us to sample from a truncated multivariate normal distribution
@@ -588,7 +588,7 @@ sampler <- function(elements, Sigma){
 #'
 #' The function searches for the target variable, fixed effects variables,
 #' if there is a cluster ID: this and the random effects variables.\cr
-#' The names of the fixed and random intercepts variable (if existent) are explicitly labelled.
+#' The names of the fixed and random intercepts variable (if existent) are explicitly labeled
 #' In imputation models, the target variable can act as covariate
 #' for other covariates - so we treat the target variable as fix effect variable.
 #' @param model_formula A formula (from class \code{formula})
@@ -1131,7 +1131,7 @@ idf2interval <- function(idf){
 #'
 #' Function to multiply single elements or vectors (of correct dimension) to the interval object
 #' @param interval an object from class interval
-#' @param x an single element or vector for multplication
+#' @param x an single element or vector for multiplication
 #' @return an interval object
 #' @export
 #' @rdname interval-multiply
@@ -1206,7 +1206,7 @@ stand <- function(X){
 #' Function to exclude variables that have too many levels as they may cause numerical problems
 #' @param X A n times p data.frame with p fixed (or random) effects variables.
 #' @param k An integer defining the allowed maximum of levels in a factor covariate.
-#' @return A n times (p-r) data.frame, with r beeing the number of variables with too many factors.
+#' @return A n times (p-r) data.frame, with r being the number of variables with too many factors.
 #' @export
 remove_excessives <- function(X, k = 10){
 
@@ -1261,7 +1261,7 @@ remove_excessives <- function(X, k = 10){
 #' @param fe A list with the decomposed elements of the \code{model_formula}.
 #' @param interaction_names A list with the names of the variables
 #' that have been generated as interaction variables
-#' @param NA_locator A n x p matrix localising the missing values in the original
+#' @param NA_locator A n x p matrix localizing the missing values in the original
 #' dataset. The elements are TRUE if the original data are missing and FALSE if the
 #' are observed.
 #' @param list_of_types a list specifying the types of the variables.

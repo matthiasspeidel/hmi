@@ -6,7 +6,7 @@
 #' in line with his analysis model formula.\cr
 #' And of course he can specify some parameters for the imputation routine
 #' (like the number of imputations and iterations) including Gibbs-sampler parameters
-#' (number of iterations, burnin and thinning.\cr
+#' (number of iterations, burn-in and thinning.\cr
 #' @param data A \code{data.frame} with all variables appearing in \code{model_formula}.
 #' @param model_formula A \code{\link[stats]{formula}} used for the analysis model.
 #' Currently the package is designed to handle formula used in
@@ -19,10 +19,10 @@
 #' in the data.frame. The elements have to contain a single character denoting the type of the variable.
 #' See \code{get_type} for details about the variable types.
 #' With the function \code{list_of_types_maker}, the user can get the framework for this object.
-#' In most scenarios this is shouldn't be necessary.
+#' In most scenarios this is should not be necessary.
 #' One example where it might be necessary is when only two observations
-#' of a continouos variable are left - because in this case \code{get_type}
-#' interprete is variable to be binary. Wrong is it in no case.
+#' of a continuous variable are left - because in this case \code{get_type}
+#' interpret is variable to be binary. Wrong is it in no case.
 #' @param pool_with_mice A Boolean indicating whether the user wants to pool the \code{M} data sets by mice
 #' using his \code{model_formula}. The default value is \code{FALSE} because this tampers the
 #' \code{mids} object as it adds an argument \code{pooling} not found in "normal" \code{mids} objects
@@ -31,7 +31,7 @@
 #' @param thin An integer defining the thinning interval (see \code{MCMCglmm}).
 #' @param burnin An integer defining the percentage of draws from the gibbs sampler
 #' that should be discarded as burn in (see \code{MCMCglmm}).
-#' @param mn An interger defining the minimum number of individuals per cluster.
+#' @param mn An integer defining the minimum number of individuals per cluster.
 #' @return The function returns a \code{mids} object. See \code{mice} for further information.
 #' @examples
 #' \dontrun{
@@ -316,13 +316,13 @@ How do you want to proceed: \n
 
   #make sure that the intercept variable exist, and has the value 1
   if(fe$intercept_varname != ""){
-    print(paste("We interprete", fe$intercept_varname,
+    print(paste("We interpret", fe$intercept_varname,
                 "as the intercept variable and set its value to 1."))
     my_data[, fe$intercept_varname] <- 1
   }
 
   if(fe$clID_varname != ""){
-    print(paste("We interprete", fe$clID_varname,
+    print(paste("We interpret", fe$clID_varname,
                 "as the cluster indicator and treat it as a factor."))
     my_data[, fe$clID_varname] <- as.factor(my_data[, fe$clID_varname])
   }
@@ -418,7 +418,7 @@ How do you want to proceed: \n
   categorical <- types == "categorical"
   if(any(categorical)){
     for(catcount in 1:sum(categorical)){
-      print(paste("We interprete", names(my_data)[categorical][catcount],
+      print(paste("We interpret", names(my_data)[categorical][catcount],
                   "as a categorical variable and force it to be a factor."))
       my_data[, names(my_data)[categorical][catcount]] <-
         as.factor(my_data[, names(my_data)[categorical][catcount]])

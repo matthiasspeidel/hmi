@@ -1,4 +1,4 @@
-#' The function for hierarchical imputation of contious variables.
+#' The function for hierarchical imputation of continuous variables.
 #'
 #' The function is called by the wrapper.
 #' @param y_imp A Vector with the variable to impute.

@@ -2,7 +2,7 @@
 #'
 #' This functions imputes interval data variables. Those are variables,
 #' that consists of a lower and upper (numeric) boundary. Technically
-#' those boundaries are cointained in a string, separated by a semi colon.
+#' those boundaries are contained in a string, separated by a semi colon.
 #' E.g. if a person reports there income to be something between 3000 and 4000 dollars,
 #' its value in the interval covariate would be \code{"3000;4000"}.
 #' Left (resp. right) censored data can be denoted by \code{"-Inf;x"} (resp. \code{"x;Inf"}),
