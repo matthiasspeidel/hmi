@@ -46,7 +46,7 @@ imp_cont_multi <- function(y_imp,
   #remove intercept variable
   tmp <- tmp[, get_type(tmp) != "intercept", drop = FALSE]
 
-  Z_imp_stand2 <- model.matrix(lm("target ~ 1 + .", data = tmp))
+  Z_imp_stand2 <- stats::model.matrix(stats::lm("target ~ 1 + .", data = tmp))
 
   missind <- is.na(y_imp)
   n <- nrow(X_imp_stand)

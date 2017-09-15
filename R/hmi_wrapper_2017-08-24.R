@@ -64,16 +64,11 @@
 #' test <- sleepstudy
 #' test$Intercept <- 1
 #' test[sample(1:nrow(test), size = 20), "Reaction"] <- NA
-#' hmi_imp <- hmi(data = test, model_formula = my.formula, M = 5)
+#' hmi_imp <- hmi(data = test, model_formula = my.formula, M = 5, maxit = 1)
 #' hmi_pool(mids = hmi_imp, analysis_function = my_analysis)
 #' #if you are interested in fixed effects only, consider pool from mice:
 #' pool(with(data = hmi_imp, expr = lmer(Reaction ~ Days + (1 + Days | Subject))))
 #' }
-#' require("lme4")
-#' test <- sleepstudy
-#' test$Intercept <- 1
-#' test[sample(1:nrow(test), size = 20), "Reaction"] <- NA
-#' hmi(data = test, model_formula = Reaction ~ Days + (1 + Days|Subject), M = 2, maxit = 1)
 #' @export
 hmi <- function(data, model_formula = NULL,
                     M = 10,
