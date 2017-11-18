@@ -6,7 +6,7 @@
 #' report "0", which clearly violates the assumption of income to be (log-) normally distributed.
 #' @param y_imp A Vector with the variable to impute.
 #' @param X_imp A data.frame with the fixed effects variables.
-#' @param heap A scalar saying to which value the data might be heaped.
+#' @param heap A numeric value saying to which value the data might be heaped.
 #' @return A n x 1 data.frame with the original and imputed values.
 imp_semicont_single <- function(y_imp,
                         X_imp,
@@ -57,7 +57,7 @@ imp_semicont_single <- function(y_imp,
   # get the value of the continuous imputation
   y_tmp[what_method == 1, 1] <- y1_imp
 
-  y_ret <- data.frame(y_imp = y_tmp)
+  y_ret <- data.frame(y_ret = y_tmp)
 
   return(y_ret)
 }
