@@ -13,7 +13,7 @@ imp_orderedcat_single <- function(y_imp, X_imp){
 
   # ----------------------------- preparing the X data ------------------
   # remove excessive variables
-  X_imp <- remove_excessives(X_imp)
+  X_imp <- cleanup(X_imp)
 
   # standardize X
   X_imp_stand <- stand(X_imp)
@@ -58,7 +58,7 @@ imp_orderedcat_single <- function(y_imp, X_imp){
 
 
   #Initialising the returning vector
-  y_ret <- data.frame(y_imp)
+  y_ret <- data.frame(y_ret = y_imp)
 
   y_ret[missind, 1] <- everything$imp[[1]][, 1]
 

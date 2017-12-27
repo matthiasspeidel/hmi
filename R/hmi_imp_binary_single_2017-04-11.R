@@ -24,7 +24,7 @@ imp_binary_single <- function(y_imp,
 
   # ----------------------------- preparing the X data ------------------
   # remove excessive variables
-  X_imp <- remove_excessives(X_imp)
+  X_imp <- cleanup(X_imp)
 
   # standardize X
   X_imp_stand <- stand(X_imp)
@@ -96,6 +96,7 @@ imp_binary_single <- function(y_imp,
     }
   }
 
+  colnames(y_ret) <- "y_ret"
   return(y_ret)
 }
 

@@ -13,7 +13,7 @@ imp_cont_single <- function(y_imp,
   # ----------------------------- preparing the X data ------------------
 
   # remove excessive variables
-  X_imp <- remove_excessives(X_imp)
+  X_imp <- cleanup(X_imp)
 
   # standardise the covariates in X (which are numeric and no intercept)
   X_imp_stand <- stand(X_imp)
@@ -51,7 +51,7 @@ imp_cont_single <- function(y_imp,
                      data.init = NULL)
 
 
-  y_ret <- data.frame(y_imp = y_imp)
+  y_ret <- data.frame(y_ret = y_imp)
   y_ret[missind, 1] <- everything$imp[[1]][, 1]
 
   return(y_ret)

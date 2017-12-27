@@ -17,7 +17,7 @@ imp_cat_single <- function(y_imp,
 
   # ----------------------------- preparing the X data ------------------
   # remove excessive variables
-  X_imp <- remove_excessives(X_imp)
+  X_imp <- cleanup(X_imp)
 
   # standardize X
   X_imp_stand <- stand(X_imp)
@@ -68,5 +68,5 @@ imp_cat_single <- function(y_imp,
 
   y_ret[missind, 1] <- everything$imp[[1]][, 1]
 
-  return(data.frame(y_imp = factor(y_ret)))
+  return(data.frame(y_ret = factor(y_ret)))
 }
