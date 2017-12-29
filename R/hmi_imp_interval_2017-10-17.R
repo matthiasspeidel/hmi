@@ -9,10 +9,12 @@
 #' with \code{x} being the (numeric) observed value.
 #' @param y_imp A Vector from the class \code{interval} with the variable to impute.
 #' @param X_imp A data.frame with the fixed effects variables.
+#' @param rounding_degrees A numeric vector with the presumed rounding degrees.
 #' @return A n x 1 data.frame with the original and imputed values.
 #' Note that this function won't return \code{interval} data as its purpose is to
 #' "break" the interval answers into precise answers.
-imp_interval <- function(y_imp, X_imp){
+imp_interval <- function(y_imp, X_imp,
+                         rounding_degrees = c(1, 10, 100, 1000)){
 
 
   # ----------------------------- preparing the X data ------------------
@@ -20,7 +22,7 @@ imp_interval <- function(y_imp, X_imp){
   X_imp <- cleanup(X_imp)
 
   # standardize X
-  X_imp_stand <- stand(X_imp)
+  X_imp_stand <- stand(X_imp, rounding_degrees = rounding_degrees)
 
   missind <- is.na(y_imp)
 

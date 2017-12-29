@@ -7,9 +7,11 @@
 #' functions as a donor.
 #' @param y_imp A Vector with the variable to impute.
 #' @param X_imp A data.frame with the fixed effects variables.
+#' @param rounding_degrees A numeric vector with the presumed rounding degrees.
 #' @return A n x 1 data.frame with the original and imputed values as a factor.
 imp_cat_single <- function(y_imp,
-                         X_imp){
+                         X_imp,
+                         rounding_degrees = c(1, 10, 100, 1000)){
 
   if(min(table(y_imp)) < 2) {
     stop("Too few observations per category in a categorical target variable.")
@@ -20,7 +22,7 @@ imp_cat_single <- function(y_imp,
   X_imp <- cleanup(X_imp)
 
   # standardize X
-  X_imp_stand <- stand(X_imp)
+  X_imp_stand <- stand(X_imp, rounding_degrees = rounding_degrees)
 
 
   #the missing indactor indicates, which values of y are missing.

@@ -3,9 +3,11 @@
 #' The function is called by the wrapper.
 #' @param y_imp A Vector with the variable to impute.
 #' @param X_imp A data.frame with the fixed effects variables.
+#' @param rounding_degrees A numeric vector with the presumed rounding degrees.
 #' @return A n x 1 data.frame with the original and imputed values.
 imp_binary_single <- function(y_imp,
-                      X_imp){
+                      X_imp,
+                      rounding_degrees = c(1, 10, 100, 1000)){
 
 
   # ----------------------------- preparing the y data ------------------
@@ -27,7 +29,7 @@ imp_binary_single <- function(y_imp,
   X_imp <- cleanup(X_imp)
 
   # standardize X
-  X_imp_stand <- stand(X_imp)
+  X_imp_stand <- stand(X_imp, rounding_degrees = rounding_degrees)
 
   #the missing indactor indicates, which values of y are missing.
   missind <- is.na(y_binary)

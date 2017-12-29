@@ -14,7 +14,8 @@
 #' Gibbs samples that shall be regarded as burnin.
 #' @param thin An integer to set the thinning interval range. If thin = 1,
 #' every iteration of the Gibbs-sampling chain will be kept. For highly autocorrelated
-#' chains, that are only examined by few iterations (say less than 1000),
+#' chains, that are only examined by few iterations (say less than 1000).
+#' @param rounding_degrees A numeric vector with the presumed rounding degrees.
 #' @return A list with 1. 'y_ret' the n x 1 data.frame with the original and imputed values.
 #' 2. 'Sol' the Gibbs-samples for the fixed effects parameters.
 #' 3. 'VCV' the Gibbs-samples for variance parameters.
@@ -25,7 +26,8 @@ imp_semicont_multi <- function(y_imp,
                              heap = 0,
                              nitt = 22000,
                              burnin = 2000,
-                             thin = 20){
+                             thin = 20,
+                             rounding_degrees = c(1, 10, 100, 1000)){
 
 
   tmp_data <- cbind(y_imp, X_imp, Z_imp, clID)
@@ -61,7 +63,8 @@ imp_semicont_multi <- function(y_imp,
                            clID = clID,
                            nitt = nitt,
                            thin = thin,
-                           burnin = burnin)
+                           burnin = burnin,
+                           rounding_degrees = rounding_degrees)
 
   what_method <- tmp1$y_ret
   # use the imputation function of the continuous variable to generate y1.imp
@@ -72,7 +75,8 @@ imp_semicont_multi <- function(y_imp,
                           clID = clID[what_method == 1],
                           nitt = nitt,
                           thin = thin,
-                          burnin = burnin)
+                          burnin = burnin,
+                          rounding_degrees = rounding_degrees)
 
   y1_imp <- tmp2$y_ret
 

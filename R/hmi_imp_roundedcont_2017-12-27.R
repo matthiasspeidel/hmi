@@ -23,7 +23,7 @@ imp_roundedcont <- function(y, X, rounding_degrees = c(1, 10, 100, 1000)){
   X1 <- cleanup(X)
 
   # standardize X
-  X1_stand <- stand(X1)
+  X1_stand <- stand(X1, rounding_degrees = rounding_degrees)
 
   #The imputation model of missing values is Y ~ X.
   #In order to get a full model matrix, we need two things

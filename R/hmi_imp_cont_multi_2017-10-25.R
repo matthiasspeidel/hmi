@@ -10,7 +10,8 @@
 #' Gibbs samples that shall be regarded as burnin.
 #' @param thin An integer to set the thinning interval range. If thin = 1,
 #' every iteration of the Gibbs-sampling chain will be kept. For highly autocorrelated
-#' chains, that are only examined by few iterations (say less than 1000),
+#' chains, that are only examined by few iterations (say less than 1000).
+#' @param rounding_degrees A numeric vector with the presumed rounding degrees.
 #' @return A list with 1. 'y_ret' the n x 1 data.frame with the original and imputed values.
 #' 2. 'Sol' the Gibbs-samples for the fixed effects parameters.
 #' 3. 'VCV' the Gibbs-samples for variance parameters.
@@ -20,7 +21,9 @@ imp_cont_multi <- function(y_imp,
                       clID,
                       nitt = 22000,
                       burnin = 2000,
-                      thin = 20){
+                      thin = 20,
+                      rounding_degrees = c(1, 10, 100, 1000)
+){
 
   # -----------------------------preparing the data ------------------
   # -- standardise the covariates in X (which are numeric and no intercept)
@@ -30,12 +33,12 @@ imp_cont_multi <- function(y_imp,
   X_imp <- cleanup(X_imp)
 
   # standardise the covariates in X (which are numeric and no intercept)
-  X <- stand(X_imp)
+  X <- stand(X_imp, rounding_degrees = rounding_degrees)
 
   # -- standardise the covariates in Z (which are numeric and no intercept)
   Z_imp <- cleanup(Z_imp)
 
-  Z <- stand(Z_imp)
+  Z <- stand(Z_imp, rounding_degrees = rounding_degrees)
 
 
   #define a place holder (ph)

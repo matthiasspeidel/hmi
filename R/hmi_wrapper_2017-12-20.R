@@ -96,7 +96,7 @@ hmi <- function(data,
   options(error = expression(NULL))
 
   if(is.null(list_of_types)){
-    tmp_list_of_types <- list_of_types_maker(data)
+    tmp_list_of_types <- list_of_types_maker(data, rounding_degrees = rounding_degrees)
   }else{
     if(!is.list(list_of_types)) stop("We need list_of_types to be a list.")
     if(!isTRUE(all.equal(sort(names(list_of_types)), sort(colnames(data))))){
@@ -442,7 +442,7 @@ How do you want to proceed: \n
   # get the variable types:
   types <- array(dim = ncol(my_data))
   for(j in 1:ncol(my_data)){
-     types[j] <- get_type(my_data[, j])
+     types[j] <- get_type(my_data[, j], rounding_degrees = rounding_degrees)
   }
 
   categorical <- types == "categorical"
@@ -472,7 +472,7 @@ How do you want to proceed: \n
   tickts_drawn <- 0
 
   if(is.null(list_of_types)){
-    tmp_list_of_types <- list_of_types_maker(my_data)
+    tmp_list_of_types <- list_of_types_maker(my_data, rounding_degrees = rounding_degrees)
     #Note: here it can happen that a variable in the original_data is assumed to be
     #semicont, but after the first imputation it is considered to be continuous.
     #Therefore we update the list of types absed on the data_before
@@ -509,7 +509,7 @@ How do you want to proceed: \n
         tmp$chains
 
       if(is.null(list_of_types)){
-        tmp_list_of_types <- list_of_types_maker(data)
+        tmp_list_of_types <- list_of_types_maker(data, rounding_degrees = rounding_degrees)
         #Note: here it can happen that a variable in the original_data is assumed to be
         #semicont, but after the first imputation it is considered to be continuous.
         #Therefore we update the list of types absed on the data_before
@@ -525,7 +525,7 @@ How do you want to proceed: \n
       #evaluate the imputed variables
       for(l2 in variables_to_impute){
         if(is.null(list_of_types)){
-          tmp_type <- get_type(my_data[, l2])
+          tmp_type <- get_type(my_data[, l2], rounding_degrees = rounding_degrees)
         }else{
           tmp_type <- list_of_types[[l2]]
         }
@@ -575,7 +575,8 @@ How do you want to proceed: \n
 
     ##get the number of missing values in each incomplete variable
     # interval data are treated as missing
-    if(get_type(data[, l2]) == "interval" | get_type(data[, l2]) == "roundedcont"){
+    if(get_type(data[, l2], rounding_degrees = rounding_degrees) == "interval" |
+       get_type(data[, l2], rounding_degrees = rounding_degrees) == "roundedcont"){
       data[, l2] <- NA
     }
     n_mis_j <- sum(is.na(data[, l2]))

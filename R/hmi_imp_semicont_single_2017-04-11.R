@@ -7,11 +7,12 @@
 #' @param y_imp A Vector with the variable to impute.
 #' @param X_imp A data.frame with the fixed effects variables.
 #' @param heap A numeric value saying to which value the data might be heaped.
+#' @param rounding_degrees A numeric vector with the presumed rounding degrees.
 #' @return A n x 1 data.frame with the original and imputed values.
 imp_semicont_single <- function(y_imp,
                         X_imp,
-                        heap = 0){
-
+                        heap = 0,
+                        rounding_degrees = c(1, 10, 100, 1000)){
 
   tmp_data <- cbind(y_imp, X_imp)
   n <- nrow(tmp_data)
@@ -42,13 +43,15 @@ imp_semicont_single <- function(y_imp,
   # For the data points with an observed y_imp,
   # this also indicates whether they are used in the continuous imputation model or not.
   what_method <- imp_binary_single(y_imp = y_binary,
-                            X_imp = X_imp)
+                            X_imp = X_imp,
+                            rounding_degrees = rounding_degrees)
 
 
   # the data points where the binary varriable is "1" (meaning continuous)
   # are used for the continuous imputation
   y1_imp <- imp_cont_single(y_imp = y_imp[what_method == 1],
-                            X_imp = X_imp[what_method == 1, , drop = FALSE])
+                            X_imp = X_imp[what_method == 1, , drop = FALSE],
+                            rounding_degrees = rounding_degrees)
 
   # set up the final i-th imputation vector
   y_tmp <- data.frame(what_method)
