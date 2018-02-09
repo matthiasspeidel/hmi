@@ -15,10 +15,13 @@
 #' @param thin An integer to set the thinning interval range. If thin = 1,
 #' every iteration of the Gibbs-sampling chain will be kept. For highly autocorrelated
 #' chains, that are only examined by few iterations (say less than 1000).
+#' @param pvalue A numeric between 0 and 1 denoting the threshold of p-values a variable in the imputation
+#' model should not exceed. If they do, they are excluded from the imputation model.
 #' @param rounding_degrees A numeric vector with the presumed rounding degrees.
 #' @return A list with 1. 'y_ret' the n x 1 data.frame with the original and imputed values.
 #' 2. 'Sol' the Gibbs-samples for the fixed effects parameters.
 #' 3. 'VCV' the Gibbs-samples for variance parameters.
+#' @export
 imp_semicont_multi <- function(y_imp,
                              X_imp,
                              Z_imp,
@@ -27,6 +30,7 @@ imp_semicont_multi <- function(y_imp,
                              nitt = 22000,
                              burnin = 2000,
                              thin = 20,
+                             pvalue = 0.2,
                              rounding_degrees = c(1, 10, 100, 1000)){
 
 
@@ -64,6 +68,7 @@ imp_semicont_multi <- function(y_imp,
                            nitt = nitt,
                            thin = thin,
                            burnin = burnin,
+                           pvalue = pvalue,
                            rounding_degrees = rounding_degrees)
 
   what_method <- tmp1$y_ret
@@ -76,6 +81,7 @@ imp_semicont_multi <- function(y_imp,
                           nitt = nitt,
                           thin = thin,
                           burnin = burnin,
+                          pvalue = pvalue,
                           rounding_degrees = rounding_degrees)
 
   y1_imp <- tmp2$y_ret
