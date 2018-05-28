@@ -178,7 +178,7 @@ imp_interval <- function(y_imp,
   hess <- m2$hessian
 
   if(m2$code > 2){
-    warning(paste("Likelihood-optimization for rounded continuous variable", colnames(y_df), "failed."))
+    warning(paste("Likelihood-optimization for rounded continuous variable", colnames(y_imp), "failed."))
   }
 
   # link about nearest covariance matrix:
