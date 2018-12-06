@@ -81,7 +81,7 @@ imp_roundedcont <- function(y_df,
   # We intentionally add + 1 because otherwise with the standardized x,
   # the intercept in the regression y ~ x can be exactly 0.
   y_stand <- (y - mean_of_y_precise)/sd_of_y_precise + 1
-  y_precise_template <- sample_imp(center.interval(y, inf2NA = TRUE))[, 1]
+  y_precise_template <- sample_imp(center_interval(y, inf2NA = TRUE))[, 1]
   y_precise_template_stand <- (y_precise_template - mean_of_y_precise)/sd_of_y_precise + 1
   # standardise the decomposed y
   decomposed_y_stand <- (decomposed_y - mean_of_y_precise)/sd_of_y_precise + 1

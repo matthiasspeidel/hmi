@@ -10,11 +10,11 @@
 #' @param pvalue A numeric between 0 and 1 denoting the threshold of p-values a variable in the imputation
 #' model should not exceed. If they do, they are excluded from the imputation model.
 #' @param k An integer defining the allowed maximum of levels in a factor covariate.
-#' @return A n x 1 data.frame with the original and imputed values as a factor.
+#' @return A n x 1 data.frame with the original and imputed values.
 imp_cat_single <- function(y_imp,
-                         X_imp,
-                         pvalue = 0.2,
-                         k = Inf){
+                           X_imp,
+                           pvalue = 0.2,
+                           k = Inf){
 
   if(min(table(y_imp)) < 2) {
     stop("Too few observations per category in a categorical target variable.")
@@ -54,7 +54,7 @@ imp_cat_single <- function(y_imp,
   colnames(X_model_matrix_1_all) <- xnames_1
 
   tmp_0_all <- data.frame(target = ph)
-  tmp_0_all[, xnames_1] <- X_model_matrix_1_all
+  tmp_0_all[, xnames_1] <- as.data.frame(X_model_matrix_1_all)
 
   #From this initial model matrix X_model_matrix_1_all
   #now step by step irrelavant variables are removed.
@@ -66,7 +66,7 @@ imp_cat_single <- function(y_imp,
   ph_sub <- ph[!missind]
   tmp_1_sub <- data.frame(target = ph_sub)
   xnames_1 <- colnames(X_model_matrix_1_sub)
-  tmp_1_sub[, xnames_1] <- X_model_matrix_1_sub
+  tmp_1_sub[, xnames_1] <- as.data.frame(X_model_matrix_1_sub)
 
   tmp_formula <- paste("target~ 0 + ", paste(xnames_1, collapse = "+"), sep = "")
   reg_1_sub <- nnet::multinom(stats::formula(tmp_formula), data = tmp_1_sub, trace = FALSE)
@@ -121,6 +121,13 @@ imp_cat_single <- function(y_imp,
     y_ret <- sample_imp(y_imp)[, 1]
   }else{
 
+    # run cart imputation from mice.
+    # Note: mice needs the variable to impute as a factor.
+    # Therefore if the data passed to hmi weren't factors (but a vector characters),
+    # the factors returned by mice need to be translated back into characters.
+    # In case a factor was passed to hmi, it still works to pass a character to this factor. cf
+    # a <- factor(c("x", "y", "z"))
+    # a[2] <- "z"
     everything <- mice::mice(data = tmp_2_all, m = 1,
                              method = "cart",
                              predictorMatrix = (1 - diag(1, ncol(tmp_2_all))),
@@ -134,11 +141,11 @@ imp_cat_single <- function(y_imp,
                              imputationMethod = NULL,
                              defaultImputationMethod = NULL,
                              data.init = NULL)
-    y_ret[missind] <- everything$imp[[1]][, 1]
+    y_ret[missind] <- as.character(everything$imp[[1]][, 1])
   }
 
 
 
-  ret <- data.frame(y_ret = factor(y_ret))
+  ret <- data.frame(y_ret = y_ret, stringsAsFactors = FALSE)
   return(ret)
 }

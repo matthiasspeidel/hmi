@@ -3,8 +3,7 @@
 #' Function to sample values in a variable from other (observed) values in this variable.
 #' So this imputation does not use further covariates.
 #' @param variable A vector of size \code{n} with missing values.
-#' @return A list with a n times 1 data.frame without missing values and
-#'  a list with the chains of the Gibbs-samples for the fixed effects and variance parameters.
+#' @return A n x 1 data.frame with the observed and imputed data
 #' @examples
 #' set.seed(123)
 #' sample_imp(c(1, NA, 3, NA, 5))
@@ -16,7 +15,7 @@ sample_imp <- function(variable){
   }
   if(all(is.na(variable))) stop("Variable consists only of NAs.")
 
-  ret <- data.frame(target = variable)
+  ret <- data.frame(target = variable, stringsAsFactors = FALSE)
   need_replacement <- is.na(variable) | is.infinite(variable)
   ret[need_replacement, 1] <- sample(size = sum(need_replacement),
                              variable[!need_replacement], replace = TRUE)
@@ -134,7 +133,7 @@ get_type <- function(variable, spike = NULL,
         return(type)
       }
 
-      #if the variable is numeric and more than 10% of the variable values share the same value,
+      #if the variable is numeric and more than 10 \% of the variable values share the same value,
       #We consider this variable as semi-continious.
 
       if(is.null(spike)){
@@ -146,7 +145,7 @@ get_type <- function(variable, spike = NULL,
         type <- "semicont"
       }
 
-      # if more than 50% of the data are divisible by on of the given rounding degrees,
+      # if more than 50 \% of the data are divisible by on of the given rounding degrees,
       # they are considered to be rounded continuous
       # Observed 0s shall not be counted as rounded,
       #because otherwise semi-continuous variables might be considered to be rounded-continuous.
@@ -181,7 +180,7 @@ get_type <- function(variable, spike = NULL,
       }
 
       type <- "interval"
-      #if more than 50% of the precise part of an interval variable is rounded,
+      #if more than 50 \% of the precise part of an interval variable is rounded,
       #the whole variable is considered to be a rounded continous variable
       tmp <- decompose_interval(interval = variable)[, "precise"]
       if(sum(!is.na(tmp)) == 0) return(type)
@@ -241,7 +240,7 @@ Mode <- function(x){
 
 #' Helps the user to make a list of spikes.
 #'
-#' In \code{hmi} the user can add a list of spikes. This function gives him a framework
+#' In \code{hmi} the user can add a list of spikes. This function gives her/him a framework
 #' with suggestions. Of course the user can make changes by herself/himself afterwards.
 #' For example, the function might wrongly classify a variable to have a spike.
 #' @param data the data.frame also passed to \code{hmi}.
@@ -368,7 +367,7 @@ factors <- function(x){
 #' (classically formatted or as interval object).
 #' The basic idea is 1. to count which factor is observed in the data more often than expected.
 #' 2. to check whether a factor can explain at least three observed piles of observations in the data
-#' 3. to check whether a factor explains at least 20\% of observations (additional to previous factors).
+#' 3. to check whether a factor explains at least 20 \% of observations (additional to previous factors).
 #' Factors fulfilling this premises are returned as suggested rounding degrees.
 #' @param x A vector or \code{interval} object.
 suggest_rounding_degrees <- function(x){
@@ -413,7 +412,7 @@ suggest_rounding_degrees <- function(x){
           counter <- counter + 1
 
           #update tab_factors: every following (smaller) factor which can divide cv without rest
-          #has to explain 20% more of the data than cv. For this reason, observation divisable by
+          #has to explain 20 \% more of the data than cv. For this reason, observation divisable by
           #cv are removed from the tmpvariable
           tmpvariable <- tmpvariable[tmpvariable %% cv != 0]
           #update tab_factors
@@ -884,7 +883,7 @@ sampler <- function(elements, Sigma){
 #' If some of them don't exist, they get the value "".
 #' @export
 extract_varnames <- function(model_formula = NULL, constant_variables,
-                             variable_names_in_data, data){
+                             variable_names_in_data = colnames(data), data){
 
 
   # Set up default values for key variables like the target variable, the clusterID,
@@ -1094,10 +1093,19 @@ fixed_intercept_check <- function(model_formula){
     }
   }
 
-  fixedeffects_varname <- all.vars(stats::delete.response(stats::terms(lme4::nobars(model_formula))))
+  #If a dot was used in the model_formula (e.g. y ~ 0 + .) stats::terms() need a data.frame as all variables from this dataset will be used.
+  #In this case, here an artificial dataset with a (hopefully) unique variable name is used.
+  fixedeffects_varname <- all.vars(stats::delete.response(
+    stats::terms(lme4::nobars(model_formula), data = data.frame("ThisVariableWasIntroducedByHMIBecauseADotAppearedInTheFormula" = 1:2))
+    ))
   # --check if intercept is present
-  fixed_intercept_exists <- attributes(stats::delete.response(stats::terms(lme4::nobars(model_formula))))$intercept == 1
+  fixed_intercept_exists <- attributes(stats::delete.response(
+    stats::terms(lme4::nobars(model_formula), data = data.frame("ThisVariableWasIntroducedByHMIBecauseADotAppearedInTheFormula" = 1:2))
+    ))$intercept == 1
 
+ # if(fixedeffects_varname == "ThisVariableWasIntroducedByHMIBecauseADotAppearedInTheFormula"){
+#    fixed_intercept_exists <- FALSE
+#  }
   #check on unplausibilities:
   if(fixed_intercept_exists &
      ("0" %in% fixedeffects_varname | "-1" %in% fixedeffects_varname)){
@@ -1131,6 +1139,10 @@ random_intercept_check <- function(model_formula){
   }
 
   randomeffects_varname <- as.character(lme4::findbars(model_formula)[[1]][2])
+  #if there are no random effects at all, there definitely is random intercept
+  if(length(randomeffects_varname) == 0) return(FALSE)
+  #if the only random effect variable is "0", the input makes no sense, and of course no random intercept is specified
+  if(randomeffects_varname == "0") return(FALSE)
   # --check if intercept is present
   #supported ways to specify an intercept:
   # "1 +..."
@@ -1168,12 +1180,13 @@ random_intercept_check <- function(model_formula){
 #' Function to transform numeric (or character) vectors or n times 2 matrices into an interval object
 #' @param x An object to transform.
 #' Currently the function can transform numeric vectors and characters
+#' @param sna Boolean: if \code{TRUE}, \code{NA}s are kept as standard \code{NA}s.
+#' Otherwise they are turned into \code{"-Inf;Inf"}.
 #' @seealso \link[hmi]{generate_interval}
 #' @return A vector of class \code{interval}.
-#' @examples as.interval(c("1000;2000", "700:700"))
-#' as.interval(c("1500;1500", "700:700"))
+#' @examples as.interval(c("1000;2000", "700;700", NA))
 #' @export
-as.interval <- function(x){
+as.interval <- function(x, sna = FALSE){
   #Therefore it is needed, that "NA;NA" is a level in interval.
   if(is.factor(x)){
     x <- as.character(x)
@@ -1186,12 +1199,22 @@ as.interval <- function(x){
     }
 
   }
+  if(sna) orgNA <- is.na(x)
+
   x[is.na(x)] <- c("NA;NA")
   raw <- unlist(strsplit(x, ";"))
   raw[raw == "NA"] <- NA
   lower <- as.numeric(raw[seq(1, 2*length(x), by = 2)])
   upper <- as.numeric(raw[seq(2, 2*length(x), by = 2)])
-  ret <- generate_interval(lower, upper)
+
+  if(sna){
+    lower[orgNA] <- NA
+    upper[orgNA] <- NA
+    ret <- generate_interval(lower, upper, sna = TRUE)
+  }else{
+    ret <- generate_interval(lower, upper)
+  }
+
   return(ret)
 }
 
@@ -1201,11 +1224,15 @@ as.interval <- function(x){
 #' \code{interval} object from numeric (or character) vectors.
 #' @param lower a vector with the lower values of a variable
 #' @param upper a vector with the upper values of a variable
+#' @param sna Boolean: if \code{TRUE}, \code{NA}s are kept as standard \code{NA}s.
+#' Otherwise they are turned into \code{"-Inf;Inf"}.
 #' @return a character vector with the lower and upper bound values.
 #' @export
-generate_interval <- function(lower, upper){
+generate_interval <- function(lower, upper, sna = FALSE){
   if(length(lower) != length(upper)) stop("lower and upper need the same length")
 
+  orgNAlower <- is.na(lower)
+  orgNAupper <- is.na(upper)
   # NA get the most uniformative values:
   # for the lower bound it is -Inf, and for the upper it is +Inf
 
@@ -1220,6 +1247,9 @@ generate_interval <- function(lower, upper){
     stop("each element in lower must be smaller or equal to the corresponding element in upper")
   }
   ret <- paste(lower, upper, sep = ";")
+  if(sna){
+    ret[orgNAlower & orgNAupper] <- NA
+  }
   class(ret) <- "interval"
   return(ret)
 }
@@ -1241,14 +1271,17 @@ is_interval <- function(x){
   #search at the start for one or more digits optionally preceded by an "-"
   # optionally followed by one period (or "full stop") and one or more digits
   #or the interval starts with "-Inf"
-  reg_low <- "^((-){0,1}[[:digit:]]{1,}(\\.[[:digit:]]{1,}){0,1}|-Inf|NA)"
+  reg_low <- "^((-){0,1}[[:digit:]]{1,}(\\.[[:digit:]]{1,}){0,1}|(-){0,1}Inf|NA)"
 
   #the end of the interval is one or more digits optionally preceded by an "-"
   # optionally followed by one period (or "full stop") and one or more digits
   #or the interval ends with "Inf"
-  reg_up <- "((-){0,1}[[:digit:]]{1,}(\\.[[:digit:]]{1,}){0,1}|Inf|NA)$"
+  reg_up <- "((-){0,1}[[:digit:]]{1,}(\\.[[:digit:]]{1,}){0,1}|(-){0,1}Inf|NA)$"
+  #currently no check on whether the interval is valid (lower bound does not exceed upper bound) is made.
   matches <- grep(paste(reg_low, reg_up, sep = ";"), x)
 
+  #currently c("100", "100;200") is not classified as interval. This might be changed in future by setting
+  #return(length(matches) >= 1)
   return(length(matches) == length(x))
 
 }
@@ -1283,10 +1316,10 @@ split_interval <- function(interval){
 
   #NA values have to be set temporarily to "NA;NA"
   #Therefore it is needed, that "NA;NA" is a level in interval.
-  if(is.factor(interval)){
-    interval <- as.character(interval)
-  }
-  interval[is.na(interval)] <- c("NA;NA")
+
+  interval <- as.character(interval)
+
+  interval[is.na(interval)] <- "NA;NA"
   raw <- unlist(strsplit(interval, ";"))
   raw[raw == "NA"] <- NA
   lower <- as.numeric(raw[seq(1, 2*length(interval), by = 2)])
@@ -1328,17 +1361,29 @@ decompose_interval <- function(interval){
   if(is.factor(interval)){
     interval <- as.character(interval)
   }
+
+  if(is.character(interval)){
+    interval <- as.interval(interval)
+  }
+
   if(!is_interval(interval)){
     ret <- data.frame(precise = interval, lower_imprecise = NA, upper_imprecise = NA,
                      lower_general = ifelse(is.na(interval), -Inf, interval),
                      upper_general = ifelse(is.na(interval), Inf, interval))
     return(ret)
   }
+
   tmp <- split_interval(interval)
   dists <- tmp[, 2] - tmp[, 1]
   dists[is.na(dists)] <- Inf
+
+  # Get the precise observations of the interval (the imprecise observations will be NA)
   precise <- ifelse(abs(dists) < 1e-20, tmp[, 1], NA)
-  imprecise <- as.interval(ifelse(abs(dists) >= 1e-20 | is.na(dists), interval, NA))
+
+  # Get the imprecise observations of the interval (the precise will be NA)
+  imprecise <- as.interval(ifelse(abs(dists) >= 1e-20 | is.na(dists), interval, NA), sna = TRUE)
+
+  # Split the imprecise observations up into the lower and upper bound
   tmp_imprecise <- split_interval(imprecise)
 
   ret <- matrix(c(precise, tmp_imprecise[, 1],
@@ -1769,30 +1814,48 @@ ceiling.interval <- function(x, ...){
 }
 
 
-#' Generic head
+#' Head for intervals
 #'
+#' Head function for intervals returning the first elements of an \code{interval} object
 #' @param x vector, matrix, table, data.frame or interval object
 #' @param ... further arguments passed to \code{head}.
-head <- function(x, ...) UseMethod("head")
-
-#' @describeIn head for interval objects.
 head.interval <- function(x, ...){
   tmp <- utils::head(split_interval(x, ...))
   return(generate_interval(lower = tmp[, 1], upper = tmp[, 2]))
 }
 
-#' Generic tail
+#' Tail for intervals
 #'
-#' @param x numeric vector or interval object
+#' Tail function for intervals returning the last elements of an \code{interval} object
+#' @param x vector, matrix, table, data.frame or interval object
 #' @param ... further arguments passed to \code{tail}.
-tail <- function(x, ...) UseMethod("tail")
-
-#' @describeIn tail for interval objects.
 tail.interval <- function(x, ...){
   tmp <- utils::tail(split_interval(x, ...))
   return(generate_interval(lower = tmp[, 1], upper = tmp[, 2]))
 }
 
+#' Index for interval
+#'
+#' Function to index elements of an interval object
+#' @param obj the interval object
+#' @param index the index of the elements to replace
+`[.interval`  <- function(obj, index){
+  ret <- as.interval(as.character(obj)[index], sna = TRUE)
+  return(ret)
+}
+
+
+#' Replace for interval
+#'
+#' Function to replace elements of an interval object
+#' @param obj the interval object
+#' @param index the index of the elements to replace
+#' @param value the value the replaced elements shall take
+`[<-.interval` <- function(obj, index, value){
+  ret <- as.character(obj)
+  ret[index] <- value
+  return(as.interval(ret, sna = TRUE))
+}
 
 #' Function to give the center of the interval
 #'
@@ -1801,7 +1864,7 @@ tail.interval <- function(x, ...){
 #' @param inf2NA logical. If \code{TRUE}, entries containing -Inf or Inf, will return NA.
 #' @return A numeric vector
 #' @export
-center.interval <- function(interval, inf2NA = FALSE){
+center_interval <- function(interval, inf2NA = FALSE){
   if(!is_interval(interval)){
     return(interval)
   }
@@ -1839,9 +1902,9 @@ stand <- function(X){
   }
   need_stand_X <- types %in% c("cont", "count", "roundedcont", "semicont")
   X_stand <- X
-  tmp <- scale(X[, need_stand_X])
+  tmp <- as.data.frame(scale(X[, need_stand_X]))
   X_stand[, need_stand_X] <- matrix(tmp, ncol = ncol(tmp)) # this avoids having attributes delivered by scale().
-  return(X_stand)
+  return(as.data.frame(X_stand))
 }
 
 #' cleanup data.frames
@@ -1954,7 +2017,9 @@ cleanup <- function(X, k = Inf){
 #' every iteration of the Gibbs-sampling chain will be kept. For highly autocorrelated
 #' chains, that are only examined by few iterations (say less than 1000),
 #' the \code{geweke.diag} might fail to detect convergence. In such cases it is
-#' essential to look a chain free from autocorrelation.
+#' essential to look at a chain free from autocorrelation. When setting \code{thin = NULL},
+#' the function will use internally a thinning of \code{max(1, round((nitt-burnin)/1000))}
+#' to get approximately 1000 iterations to be tested.
 #' @param plot Logical. Shall the chains be plotted in a traceplot or not.
 #' If the number of iterations and cycles is large, click through all traceplots
 #' can be interminable.
@@ -1982,7 +2047,8 @@ chaincheck <- function(mids, alpha = 0.01, thin = 1, plot = TRUE){
   #If no thinning parameter was given, it is set to a value that about 1000 iterations are to be
   #examinded
   if(is.null(thin)){
-    thin <- ceiling((nitt-burnin)/1000)
+    thin <- max(1, round((nitt-burnin)/1000))
+    # by using max(1, ...) we make sure that for example when nitt = 600 and burnin = 200, the thinning is sensible.
   }
 
   #If no MCMCglmm method was used to impute the data, the lists in mids$gibbs are empty.

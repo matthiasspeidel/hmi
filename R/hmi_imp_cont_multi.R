@@ -144,8 +144,15 @@ imp_cont_multi <- function(y_imp,
                                                  sep = ""))
     }
 
+    # Use a more stable optimizer:
+    ctrl <- nlme::lmeControl(opt = 'optim', maxIter = 600, msMaxIter = 600, msMaxEval = 600)
+
+    # Note, linear dependend variables might lead to a failing of the model estimation.
+    # In future versions, such variables might be excluded beforehand.
     reg_1_sub <- nlme::lme(fixed = fixformula_lme,
-                           random = randformula_lme, data = tmp_1_sub)
+                           random = randformula_lme,
+                           data = tmp_1_sub,
+                           control = ctrl)
 
     pvalues <- stats::anova(reg_1_sub)$"p-value"
     insignificant_variables <- which(pvalues > pvalue)

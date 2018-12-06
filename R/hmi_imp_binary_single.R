@@ -61,7 +61,7 @@ imp_binary_single <- function(y_imp,
   colnames(X_model_matrix_1_all) <- xnames_1
 
   tmp_0_all <- data.frame(target = ph)
-  tmp_0_all[, xnames_1] <- X_model_matrix_1_all
+  tmp_0_all[, xnames_1] <- as.data.frame(X_model_matrix_1_all)
 
   #From this initial model matrix X_model_matrix_1_all
   #now step by step irrelavant variables are removed.
@@ -73,7 +73,7 @@ imp_binary_single <- function(y_imp,
   ph_sub <- y_binary[!missind, , drop = FALSE]
   tmp_1_sub <- data.frame(target = ph_sub)
   xnames_1 <- colnames(X_model_matrix_1_sub)
-  tmp_1_sub[, xnames_1] <- X_model_matrix_1_sub
+  tmp_1_sub[, xnames_1] <- as.data.frame(X_model_matrix_1_sub)
 
   tmp_formula <- paste("target~ 0 + ", paste(xnames_1, collapse = "+"), sep = "")
 
@@ -115,19 +115,20 @@ imp_binary_single <- function(y_imp,
   tmp_2_all <- tmp_0_all[, colnames(tmp_1_sub), drop = FALSE]
   tmp_2_all$target[missind] <- NA
 
-  everything <- mice::mice(data = tmp_2_all, m = 1,
-                     method = "logreg",
-                     predictorMatrix = (1 - diag(1, ncol(tmp_2_all))),
-                     visitSequence = (1:ncol(tmp_2_all))[apply(is.na(tmp_2_all),2,any)],
-                     post = vector("character", length = ncol(tmp_2_all)),
-                     defaultMethod = "logreg",
-                     maxit = 10,
-                     diagnostics = TRUE,
-                     printFlag = FALSE,
-                     seed = NA,
-                     imputationMethod = NULL,
-                     defaultImputationMethod = NULL,
-                     data.init = NULL)
+  everything <- mice::mice(data = tmp_2_all,
+                           m = 1,
+                           method = "logreg",
+                           predictorMatrix = (1 - diag(1, ncol(tmp_2_all))),
+                           visitSequence = (1:ncol(tmp_2_all))[apply(is.na(tmp_2_all), 2, any)],
+                           post = vector("character", length = ncol(tmp_2_all)),
+                           defaultMethod = "logreg",
+                           maxit = 10,
+                           diagnostics = TRUE,
+                           printFlag = FALSE,
+                           seed = NA,
+                           imputationMethod = NULL,
+                           defaultImputationMethod = NULL,
+                           data.init = NULL)
 
   indicator <- as.numeric(as.character(mice::complete(everything, 1)$target))
 

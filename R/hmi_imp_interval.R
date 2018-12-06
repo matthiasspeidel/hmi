@@ -45,7 +45,7 @@ imp_interval <- function(y_imp,
     stop("in your interval covariate, some values in the lower bound exceed the upper bound.")
   }
 
-  y_precise_template <- sample_imp(center.interval(y_imp, inf2NA = TRUE))[, 1]
+  y_precise_template <- sample_imp(center_interval(y_imp, inf2NA = TRUE))[, 1]
   n <- length(y_precise_template)
 
   y_mean <- mean(y_precise_template)

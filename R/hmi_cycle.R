@@ -5,7 +5,8 @@
 #' every variable sequentially imputing the values, that are NA in the original data set
 #' in that current variable. The function determines the type of the variable
 #' and calls the suitable imputation function.
-#' @param data_before The data.frame with the variables to impute.
+#' @param data_before The n x p data.frame with the variables to impute. It was prepared for imputation in the \code{wrapper} function.
+#' The preparation includes the adding of intercept variables or interactions or the joining of small clusters.
 #' @param original_data The original data.frame the user passed to \code{hmi}.
 #' @param fe A list with the decomposed elements of the \code{model_formula}.
 #' @param interaction_names A list with the names of the variables
@@ -48,7 +49,8 @@
 imputationcycle <- function(data_before,
                             original_data,
                             NA_locator,
-                            fe, interaction_names,
+                            fe,
+                            interaction_names,
                             list_of_types,
                             nitt,
                             burnin,
