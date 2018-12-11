@@ -2028,7 +2028,17 @@ cleanup <- function(X, k = Inf){
 #' (ed. JB Bernando, JO Berger, AP Dawid and Adrian FM Smith) (pp. 169-193).
 #' Clarendon Press, Oxford, UK.
 #' @export
-chaincheck <- function(mids, alpha = 0.01, thin = 1, plot = TRUE){
+chaincheck <- function(mids, alpha = 0.01, thin = 1, plot){
+
+  if(rlang::is_missing(plot)){
+    if(interactive()){
+      plot <- TRUE
+    }else{
+      plot <- FALSE
+    }
+  }
+
+
 
   if(!is.numeric(alpha)){
     stop("alpha has to be a numeric value between 0 and 1.")

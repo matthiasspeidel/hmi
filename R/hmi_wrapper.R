@@ -167,6 +167,9 @@ hmi <- function(data,
             Remove those variables from your data.frame (e.g. by setting them to NULL).")
   }
 
+  if(rlang::is_missing(model_formula)){
+    model_formula <- NULL
+  }
   if(!class(model_formula) %in% c("character", "formula", "NULL")){
     stop("model_formula has to be a formula!")
   }
@@ -242,7 +245,7 @@ How do you want to proceed: \n
   # 3: By refering to an exisiting intercept variable
   # (eg. if called "Int"): ~ X1 + Int + ...
   model_formula_org <- model_formula
-  if(rlang::is_missing(model_formula)){
+  if(is.null(model_formula)){
     model_has_intercept <- TRUE
   }else{
     if(rlang::is_missing(additional_variables)){
@@ -316,6 +319,16 @@ How do you want to proceed: \n
 
       proceed <- readline("Type 'c' or 'e' into the console and press [enter]: ")
       if(proceed == "e") return(NULL)
+
+    }else{
+
+      warning(paste("We didn't find >>",
+                    paste(fe$fixedeffects_varname[!fe$fixedeffects_varname %in% names(my_data)],
+                          collapse = " and "),
+                    "<< in your data.\n
+                         hmi ignored the model_formula and ran a single level imputation."))
+      proceed <- "c"
+
     }
 
     #if the model_formula is ignored every extracted value of the model_formula is ignored...
@@ -340,6 +353,13 @@ How do you want to proceed: \n
       proceed <- readline("Type 'c' or 'e' into the console and press [enter]: ")
 
       if(proceed == "e") return(NULL)
+    }else{
+      warning(paste("We didn't find >>",
+                       paste(fe$randomeffects_varname[!fe$randomeffects_varname %in% names(my_data)],
+                             collapse = " and "),
+                       "<<in your data. \n
+                       hmi ignored the model_formula and ran a single level imputation."))
+      proceed <- "c"
     }
 
     model_formula <- NULL
@@ -366,6 +386,10 @@ How do you want to proceed: \n
 
       proceed <- readline("Type 'c' or 'e' into the console and press [enter]: ")
       if(proceed == "e") return(NULL)
+    }else{
+      warning("The package only supports one cluster ID in the model_formula. \n
+ hmi ignored the model_formula and ran a single level imputation.")
+      proceed <- "c"
     }
 
     model_formula <- NULL
@@ -383,6 +407,11 @@ How do you want to proceed: \n
 
       proceed <- readline("Type 'c' or 'e' into the console and press [enter]: ")
       if(proceed == "e") return(NULL)
+    }else{
+      warning(paste("We didn't find >>", fe$clID_varname,
+                       "<< in your data. \n
+                     hmi ignored the model_formula and ran a single level imputation."))
+      proceed <- "c"
     }
 
     model_formula <- NULL
@@ -404,6 +433,8 @@ How do you want to proceed: \n
         proceed <- readline("Type 'r', 'i or 'e' into the console and press [enter]: ")
 
       }else{ #for non-interactive use, the procedure is to remove missing cases
+        warning(paste("Missing values were found in the cluster variable >>", fe$clID_varname, "<<.",
+                       "hmi removed these missing cases from the whole data set."))
         proceed <- "r"
       }
 
@@ -495,6 +526,13 @@ How do you want to proceed: \n
 
         proceed <- readline("Type 'c' or 'e' into the console and press [enter]: ")
         if(proceed == "e") return(NULL)
+      }else{
+        warning(paste("We didn't find >>",
+                   paste(tmp[!tmp %in% names(my_data)],
+                         collapse = " and "),
+                   "<< in your data. \n
+                   The rounding_formula was ignored, and a minimal rounding_formula was run."))
+        proceed <- "c"
       }
       #if the rounding_formula is ignored, the minimal rounding formula consists of the current covariate
       ge$fixedeffects_varname <- i
@@ -523,6 +561,10 @@ How do you want to proceed: \n
 
         proceed <- readline("Type 'c' or 'e' into the console and press [enter]: ")
         if(proceed == "e") return(NULL)
+      }else{
+        warning(paste(sum(tab_1 < mn), "clusters have less than", mn, "observations. \n
+                      They have been merged with other clusters."))
+        proceed <- "c"
       }
 
 
@@ -553,13 +595,17 @@ How do you want to proceed: \n
 
     if(length(tab_1) <= 2){
       if(interactive()){
-        writeLines("The package currently requires more than two clusters\n
+        writeLines("The package currently requires more than two clusters. \n
                   How do you want to proceed: \n
                   [c]ontinue with ignoring the model_formula and running a single level imputation
                   or [e]xiting the imputation?")
 
         proceed <- readline("Type 'c' or 'e' into the console and press [enter]: ")
         if(proceed == "e") return(NULL)
+      }else{
+        warning("The package currently requires more than two clusters. \n
+                The packaged ignored the model_formula and ran a single level imputation.")
+        proceed <- "c"
       }
 
       model_formula <- NULL
