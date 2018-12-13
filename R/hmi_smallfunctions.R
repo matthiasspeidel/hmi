@@ -25,7 +25,7 @@ sample_imp <- function(variable){
 
 #' Get the type of variables.
 #'
-#' Function checks of wich type a variable is. The types are listed below
+#' Function checks of which type a variable is. The types are listed below
 #' (together with a rough summary of the classification mechanism).
 #' \itemize{
 #'  \item continuous (numeric values, or integers with more than 20 different values),
@@ -499,8 +499,6 @@ list_of_rounding_formulas_maker <- function(data, default = ~ .){
 #' @return A vector with all averaged results.
 #' @examples
 #' \dontrun{
-#'  require("lme4")
-#'  require("mice")
 #'  data(Gcsemv, package = "hmi")
 #'
 #'  model_formula <- written ~ 1 + gender + coursework + (1 + gender|school)

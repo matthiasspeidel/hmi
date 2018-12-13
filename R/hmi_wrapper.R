@@ -59,8 +59,6 @@
 #' @return The function returns a \code{mids} object. See \code{mice} for further information.
 #' @examples
 #' \dontrun{
-#'  require("lme4")
-#'  require("mice")
 #'  data(Gcsemv, package = "hmi")
 #'
 #'  model_formula <- written ~ 1 + gender + coursework + (1 + gender|school)

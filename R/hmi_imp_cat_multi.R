@@ -78,7 +78,7 @@ imp_cat_multi <- function(y_imp,
   # to those variables, left in the reduced mirror model matrix.
   ph <- sample_imp(y_imp)[, 1]
 
-  YZ <- data.frame(target = rnorm(n), Z)
+  YZ <- data.frame(target = stats::rnorm(n), Z)
   #remove intercept variable
   YZ <- YZ[, apply(YZ, 2, get_type) != "intercept", drop = FALSE]
 
