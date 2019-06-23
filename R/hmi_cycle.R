@@ -345,7 +345,7 @@ imputationcycle <- function(data_before,
       if(is.null(rounding_degrees)){       ## Setting 1 ##
         rounding_degrees_tmp <- suggest_rounding_degrees(data_before[, l2])
 
-      }else if(is.integer(rounding_degrees)){      ## Setting 2 ##
+      }else if(is.integer(rounding_degrees) | is.numeric(rounding_degrees)){      ## Setting 2 ##
         rounding_degrees_tmp <- rounding_degrees
 
       }else if(is.list(rounding_degrees) & is.null(rounding_degrees[[l2]])){      ## Setting 3a ##

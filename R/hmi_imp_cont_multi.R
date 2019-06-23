@@ -223,8 +223,15 @@ imp_cont_multi <- function(y_imp,
   for(l1 in 1:n.par.rand){
     #go through all clusters with 0 observations
     for(l2 in empty_cluster){
-      zdraws_pre <- cbind(zdraws_pre[, 0:((l1-1)* ncluster + (l2-1))], 0,
-                          zdraws_pre[,  ((l1-1)* ncluster + l2):ncol(zdraws_pre)])
+      # into the matrix of cluster specific random effects (zdraws_pre) columns with zeros are added.
+
+      # At some specific points, 0-columns have to be included.
+      # Therefore zdraws_pre is split up into a part left to the 0-column
+      # and a part right to it.
+      leftpart <- 0:((l1-1)* ncluster + (l2-1))
+      rightpart <- -leftpart
+      zdraws_pre <- cbind(zdraws_pre[, leftpart], 0,
+                          zdraws_pre[, rightpart])
     }
   }
 

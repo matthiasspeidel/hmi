@@ -316,7 +316,7 @@ list_of_types_maker <- function(data, spike = NULL, rounding_degrees = NULL){
       tmp_type <- get_type(data[, l2],
                            spike = spike_tmp, rounding_degrees = rounding_degrees_tmp)
 
-    }else if(is.integer(rounding_degrees)){      ## Setting 2 ##
+    }else if(is.integer(rounding_degrees) | is.numeric(rounding_degrees)){      ## Setting 2 ##
       rounding_degrees_tmp <- rounding_degrees
       tmp_type <- get_type(data[, l2],
                            spike = spike_tmp, rounding_degrees = rounding_degrees_tmp)

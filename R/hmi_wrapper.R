@@ -135,19 +135,25 @@ hmi <- function(data,
     tmp_list_of_types <- list_of_types
   }
 
-  #Check for implicit specifications for a variable to be semicont or roundedcont
+  #Check for implicit specifications for a variable to be semicont
   if(is.list(spike)){
     for(varindex in colnames(data)){
       if(is.null(list_of_types[[varindex]]) & !is.null(spike[[varindex]])){
         tmp_list_of_types[[varindex]] <- "semicont"
       }
+    }
+  }
 
+
+
+  #Check for implicit specifications for a variable to be roundedcont
+  if(is.list(rounding_degrees)){
+    for(varindex in colnames(data)){
       if(is.null(list_of_types[[varindex]]) & !is.null(rounding_degrees[[varindex]])){
         tmp_list_of_types[[varindex]] <- "roundedcont"
       }
     }
   }
-
 
   my_data <- data
 
@@ -312,7 +318,7 @@ How do you want to proceed: \n
                        paste(fe$fixedeffects_varname[!fe$fixedeffects_varname %in% names(my_data)],
                              collapse = " and "),
                        "<< in your data. How do you want to proceed: \n
-                       [c]ontinue with ignoring the model_formula and running a single level imputation
+                       [c]ontinue with ignoring the model_formula and running an imputation based on all variables
                        or [e]xiting the imputation?"))
 
       proceed <- readline("Type 'c' or 'e' into the console and press [enter]: ")
@@ -324,7 +330,7 @@ How do you want to proceed: \n
                     paste(fe$fixedeffects_varname[!fe$fixedeffects_varname %in% names(my_data)],
                           collapse = " and "),
                     "<< in your data.\n
-                         hmi ignored the model_formula and ran a single level imputation."))
+                         hmi ignored the model_formula and ran an imputation, based on all variables."))
       proceed <- "c"
 
     }
@@ -656,6 +662,8 @@ How do you want to proceed: \n
                                   paste("Chain", 1:m))
 
   my_chainVar <- my_chainMean
+  # Initialize the list with the of used imputation methods
+  my_method <- my_chainMean
 
   cat("Imputation progress:\n")
   cat("0%   20%  40%  60%  80%  100%\n")
@@ -673,7 +681,7 @@ How do you want to proceed: \n
     tmp_list_of_types <- list_of_types
   }
 
-  #initialize the list for the chains of Gibbs-samplings
+  # initialize the list for the chains of Gibbs-samplings
   gibbs <- list()
 
   for(i in 1:m){
@@ -735,6 +743,14 @@ How do you want to proceed: \n
           tmp_type <- list_of_types[[l2]]
         }
 
+        # If the type is still NULL
+        # (this can happen when the list_of_types has some entries for other variables, but not for the current variable l2)
+        # a type is derived for the current variable.
+        if(is.null(tmp_type)){
+          tmp_type <- list_of_types_maker(data[, l2, drop = FALSE],
+                              spike = spike, rounding_degrees = rounding_degrees)[[1]]
+        }
+
         to_evaluate <- my_data[is.na(data[, l2]), l2, drop = TRUE]
 
         if(tmp_type == "roundedcont"){
@@ -775,6 +791,10 @@ How do you want to proceed: \n
           to_evaluate <- 1
         }
 
+        # Save the used method
+        my_method[l2, l1, i] <- tmp_type
+
+        # Save Chain Mean and Variance
         my_chainMean[l2, l1, i] <- mean(to_evaluate)
         my_chainVar[l2, l1, i] <- stats::var(to_evaluate)
       }
@@ -804,19 +824,22 @@ How do you want to proceed: \n
 
   }
 
-
   # -------------- SET UP MIDS OBJECT  --------------
 
   imp_hmi <- stats::setNames(vector("list", ncol(data)), colnames(data))
-  method <- unlist(list_of_types_maker(data, spike = spike, rounding_degrees = rounding_degrees))
-  names(method) <- colnames(data)
+  # as used method take the entries for the last chain at the last iteration.
+  method <- my_method[, maxit, m]
 
   for(l2 in variables_to_impute){
 
-    tmp_type <- list_of_types_maker(data[, l2, drop = FALSE],
-                 spike = spike, rounding_degrees = rounding_degrees)[[1]]
+    # If only only variable is to be imputed, method is a single string, and method[l2] would return NA.
+    if(length(method) == 1){
+      tmp_type <- method
+    }else{
+      tmp_type <- method[l2]
+    }
 
-    if(tmp_type == "interval" |tmp_type == "roundedcont"){
+    if(tmp_type == "interval" | tmp_type == "roundedcont"){
       data[, l2] <- NA
     }
     n_mis_j <- sum(is.na(data[, l2]))
