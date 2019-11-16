@@ -138,8 +138,6 @@ imp_cat_single <- function(y_imp,
                              diagnostics = TRUE,
                              printFlag = FALSE,
                              seed = NA,
-                             imputationMethod = NULL,
-                             defaultImputationMethod = NULL,
                              data.init = NULL)
     y_ret[missind] <- as.character(everything$imp[[1]][, 1])
   }

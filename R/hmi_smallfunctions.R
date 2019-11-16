@@ -1701,36 +1701,29 @@ table.default <- function(x, ...) {
 #' For imprecise elements, \code{NA} is returned.
 #' @export
 #' @rdname interval-modulo
+#' \alias{\%<unescaped bksl>\%}
 "%%.interval" <- function(x, interval){
   return(decompose_interval(interval)[, "precise"] %% x)
 }
 
 
-#' Generic log
+#' Log function for interval objects
 #'
+#' Log function for interval objects
 #' @param x numeric vector or interval object
 #' @param ... further arguments passed to \code{log}
-log <- function(x, ...) UseMethod("log")
-
-#' @describeIn log for numeric vectors
-log.default <- function(x, ...) base::log(x, ...)
-
-#' @describeIn log for interval objects.
+#' @export
 log.interval <- function(x, ...){
   tmp <- base::log(split_interval(x, ...))
   return(generate_interval(lower = tmp[, 1], upper = tmp[, 2]))
 }
 
-#' Generic exp
+#' Exp function for interval objects
 #'
+#' Exp function for interval objects
 #' @param x numeric vector or interval object
 #' @param ... further arguments passed to \code{exp}.
-exp <- function(x, ...) UseMethod("exp")
-
-#' @describeIn exp for numeric vectors
-exp.default <- function(x, ...) base::exp(x, ...)
-
-#' @describeIn exp for interval objects.
+#' @export
 exp.interval <- function(x, ...){
   tmp <- base::exp(split_interval(x, ...))
   return(generate_interval(lower = tmp[, 1], upper = tmp[, 2]))
@@ -1750,65 +1743,51 @@ exp.interval <- function(x, ...){
   generate_interval(lower = tmp[, 1], upper = tmp[, 2])
 }
 
-#' Generic sqrt
+
+#' Sqrt function for interval objects
 #'
+#' Sqrt function for interval objects
 #' @param x numeric vector or interval object
 #' @param ... further arguments passed to \code{sqrt}.
-sqrt <- function(x, ...) UseMethod("sqrt")
-
-#' @describeIn sqrt for numeric vectors
-sqrt.default <- function(x, ...) base::sqrt(x, ...)
-
-#' @describeIn sqrt for interval objects.
+#' @export
 sqrt.interval <- function(x, ...){
   tmp <- base::sqrt(split_interval(x, ...))
   return(generate_interval(lower = tmp[, 1], upper = tmp[, 2]))
 }
 
-#' Generic round
+
+#' Round function for interval objects
 #'
+#' Round function for interval objects
 #' @param x numeric vector or interval object
 #' @param ... further arguments passed to \code{round}.
-round <- function(x, ...) UseMethod("round")
-
-#' @describeIn round for numeric vectors
-round.default <- function(x, ...) base::round(x, ...)
-
-#' @describeIn round for interval objects.
+#' @export
 round.interval <- function(x, ...){
   tmp <- base::round(split_interval(x, ...))
   return(generate_interval(lower = tmp[, 1], upper = tmp[, 2]))
 }
 
-#' Generic floor
-#'
+#' Floor function for interval objects
+#' Floor function for interval objects
 #' @param x numeric vector or interval object
 #' @param ... further arguments passed to \code{floor}.
-floor <- function(x, ...) UseMethod("floor")
-
-#' @describeIn floor for numeric vectors
-floor.default <- function(x, ...) base::floor(x, ...)
-
-#' @describeIn floor for interval objects.
+#' @export
 floor.interval <- function(x, ...){
   tmp <- base::floor(split_interval(x, ...))
   return(generate_interval(lower = tmp[, 1], upper = tmp[, 2]))
 }
 
 
-#' Generic ceiling
+#' Ceiling funtion for intervals
 #'
+#' Ceiling funtion for intervals
 #' @param x numeric vector or interval object
 #' @param ... further arguments passed to \code{ceiling}.
-ceiling <- function(x, ...) UseMethod("ceiling")
-
-#' @describeIn ceiling for numeric vectors
-ceiling.default <- function(x, ...) base::ceiling(x, ...)
-
-#' @describeIn ceiling for interval objects.
+#' @export
 ceiling.interval <- function(x, ...){
   tmp <- base::ceiling(split_interval(x, ...))
-  return(generate_interval(lower = tmp[, 1], upper = tmp[, 2]))
+  ret = generate_interval(lower = tmp[, 1], upper = tmp[, 2])
+  return(ret)
 }
 
 

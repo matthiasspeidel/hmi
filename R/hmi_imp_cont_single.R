@@ -111,8 +111,6 @@ imp_cont_single <- function(y_imp,
                      diagnostics = TRUE,
                      printFlag = FALSE,
                      seed = NA,
-                     imputationMethod = NULL,
-                     defaultImputationMethod = NULL,
                      data.init = NULL)
 
 

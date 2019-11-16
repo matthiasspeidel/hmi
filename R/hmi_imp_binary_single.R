@@ -15,8 +15,8 @@ imp_binary_single <- function(y_imp,
 
   # ----------------------------- preparing the y data ------------------
   # stransform y_imp into a real binary with only zeros and ones (and NAs).
-  first_possibility <- utils::head(sort(y_imp), n = 1)
-  second_possibility <- utils::tail(sort(y_imp), n = 1)
+  first_possibility <- sort(y_imp)[1]
+  second_possibility <- rev(sort(y_imp))[1]
   y_binary <- data.frame(target = factor(y_imp, labels = c(0, 1)))
 
   # If one category has less then two observations, no binary model can be estimated.
@@ -126,8 +126,6 @@ imp_binary_single <- function(y_imp,
                            diagnostics = TRUE,
                            printFlag = FALSE,
                            seed = NA,
-                           imputationMethod = NULL,
-                           defaultImputationMethod = NULL,
                            data.init = NULL)
 
   indicator <- as.numeric(as.character(mice::complete(everything, 1)$target))

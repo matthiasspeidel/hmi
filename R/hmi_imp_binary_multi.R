@@ -29,8 +29,8 @@ imp_binary_multi <- function(y_imp,
 
   # ----------------------------- preparing the y data ------------------
   # stransform y_imp into a real binary with only zeros and ones (and NAs).
-  first_possibility <- utils::head(sort(y_imp), n = 1)
-  second_possibility <- utils::tail(sort(y_imp), n = 1)
+  first_possibility <- sort(y_imp)[1]
+  second_possibility <- rev(sort(y_imp))[1]
   y_binary <- data.frame(y = factor(y_imp, labels = c(0, 1)))
 
 
