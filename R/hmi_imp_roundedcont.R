@@ -230,12 +230,9 @@ imp_roundedcont <- function(y_df,
       constant_variables <- apply(df_for_g_sub, 2, function(x) length(unique(x)) == 1)
       df_for_g_sub2 <- df_for_g_sub[, !constant_variables, drop = FALSE]
       if(ncol(df_for_g_sub2) == 1){  # only target variable is left
-        probitstart <- VGAM::vglm("target ~ 1",
-                                  data = df_for_g_sub,
-                                  family = VGAM::cumulative(parallel = TRUE))
+        probitstart <- ordinal::clm("target ~ 1", data = df_for_g_sub2)
       }else{
-        probitstart <- VGAM::vglm("target ~ 1 + .", data = df_for_g_sub2,
-                                  family = VGAM::cumulative(parallel = TRUE))
+        probitstart <- ordinal::clm("target ~ 1 + .", data = df_for_g_sub2)
 
       }
       probitstart
@@ -257,11 +254,9 @@ Consider specifying the variable to be continuous via list_of_types (see ?hmi).\
       constant_variables <- apply(df_for_g_sub, 2, function(x) length(unique(x)) == 1)
       df_for_g_sub2 <- df_for_g_sub[, !constant_variables, drop = FALSE]
       if(ncol(df_for_g_sub2) == 1){
-        probitstart <- VGAM::vglm("target ~ 0 + .",
-                                  data = df_for_g_sub,
-                                  family = VGAM::cumulative(parallel = TRUE))
+        probitstart <- ordinal::clm("target ~ 0 + .", data = df_for_g_sub)
       }else{
-        probitstart <- VGAM::vglm("target ~ 1 + .", data = df_for_g_sub2, family = VGAM::cumulative(parallel = TRUE))
+        probitstart <-  ordinal::clm("target ~ 1 + .", data = df_for_g_sub2)
 
       }
       return(probitstart)
@@ -272,25 +267,20 @@ Consider specifying the variable to be continuous via list_of_types (see ?hmi).\
   )
 
 
-  PSI_as_MM_sub <- stats::model.matrix(probitstart)[1:nrow(stats::model.matrix(probitstart)),
-                                                1:ncol(stats::model.matrix(probitstart))]
+  PSI_as_MM_sub <- stats::model.matrix(probitstart)[[1]]
+
   #remove the intercept variables
   PSI_as_MM_sub <- PSI_as_MM_sub[, -grep("(Intercept)", colnames(PSI_as_MM_sub)), drop = FALSE]
-  #old: remove target variable
-  #PSI_as_MM <- PSI_as_MM[, -grep(colnames(y_df)[1], colnames(PSI_as_MM)), drop = FALSE]
-  #Individuals are containted multiple times in the model.matrices returned by VGAM,
-  #dependent on how many categories there are. The presumed purpose is to generet (K-1) intercept dummies
 
-  PSI_as_MM_sub <- PSI_as_MM_sub[seq(1, nrow(PSI_as_MM_sub), by = length(unique(g))-1), , drop = FALSE]
-
-  tmp <- attr(probitstart, "coefficients")
-  kstart <- as.vector(tmp[grep("(Intercept)", names(tmp))])
+  #starting values for the thresholds:
+  tmp <- stats::coef(probitstart)
+  kstart <- as.vector(tmp[grep("[|]", names(tmp))])
   # the tresholds (in the summary labeled "Intercepts")
   #explaining the tresholds for the example of rounding degrees 1, 10, 100 and 1000:
   #0 (rounding degree 1), 0|1 (reounding degree 10),  1|2 (100),  2|3 (1000)
 
   # other regression parameters in the rounding model
-  gammastart <- tmp[-grep("(Intercept)", names(tmp))]
+  gammastart <- -tmp[-grep("[|]", names(tmp))] # note the minus since clm uses this parametrization
 
 
   gamma1start <- NULL
