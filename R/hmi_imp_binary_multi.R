@@ -105,9 +105,9 @@ imp_binary_multi <- function(y_imp,
   # the default message from lmer is bothering and therefore suppressed.
   oldw <- getOption("warn")
   options(warn = -1)
+  on.exit(options(warn = oldw))
   suppressMessages(reg_1_all <- lme4::glmer(stats::formula(tmp_formula),
                                             family = stats::binomial("logit"), data = tmp_0_all))
-  options(warn = oldw)
 
   X_model_matrix_1_all <- stats::model.matrix(reg_1_all)
   xnames_1 <- paste("X", 1:ncol(X_model_matrix_1_all), sep = "")
@@ -139,9 +139,9 @@ imp_binary_multi <- function(y_imp,
 
   oldw <- getOption("warn")
   options(warn = -1)
+  on.exit(options(warn = oldw))
   suppressMessages(reg_1_sub <- lme4::glmer(stats::formula(tmp_formula),
                                             family = stats::binomial("logit"), data = tmp_1_sub))
-  options(warn = oldw)
 
   #remove unneeded variables
   X_model_matrix_1_sub <- X_model_matrix_1_sub[, !is.na(lme4::fixef(reg_1_sub)),
@@ -164,9 +164,9 @@ imp_binary_multi <- function(y_imp,
 
     oldw <- getOption("warn")
     options(warn = -1)
+    on.exit(options(warn = oldw))
     suppressMessages(reg_1_sub <- lme4::glmer(stats::formula(tmp_formula),
                                               family = stats::binomial("logit"), data = tmp_1_sub))
-    options(warn = oldw)
 
     pvalues <- summary(reg_1_sub)$coefficients[, "Pr(>|z|)"]
     insignificant_variables <- which(pvalues > pvalue)

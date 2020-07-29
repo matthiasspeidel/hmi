@@ -335,6 +335,8 @@ Consider specifying the variable to be continuous via list_of_types (see ?hmi).\
   PSI_in_negloglik <- PSI_as_MM_sub[, colnames(PSI_as_MM_sub) != colnames(y_df)[1], drop = FALSE]
   oldw <- getOption("warn")
   options(warn = -1)
+  on.exit(options(warn = oldw))
+
   m2 <- stats::nlm(f = negloglik, p = starting_values,
                    parnames = names(starting_values),
                    X_in_negloglik = Y_X_2_all[ , xnames_1, drop = FALSE],
@@ -349,7 +351,7 @@ Consider specifying the variable to be continuous via list_of_types (see ?hmi).\
                    indicator_imprecise = indicator_imprecise,
                    indicator_outliers = indicator_outliers,
                    hessian = TRUE, gradtol = 1e-4, steptol = 1e-4)
-  options(warn = oldw)
+
   par_ml2 <- m2$estimate
   names(par_ml2) <- names(starting_values)
   hess <- m2$hessian

@@ -952,10 +952,10 @@ Therefore we cannot analyze your completed data following a multilevel categoric
       }else{
         oldw <- getOption("warn")
         options(warn = -1)
+        on.exit(options(warn = oldw))
         midsobj$pooling <- mice::pool(with(data = midsobj,
                                            expr = lme4::glmer(formula = formula(format(stats::terms.formula(model_formula_org, allowDotAsName = TRUE, data = midsobj$data))),
                                                               family = family)))
-        options(warn = oldw)
       }
     }
   }
@@ -968,3 +968,5 @@ Therefore we cannot analyze your completed data following a multilevel categoric
   return(midsobj)
 
 }
+
+

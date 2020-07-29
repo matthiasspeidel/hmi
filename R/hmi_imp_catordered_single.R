@@ -53,8 +53,8 @@ imp_orderedcat_single <- function(y_imp,
 
   oldw <- getOption("warn")
   options(warn = -1)
+  on.exit(options(warn = oldw))
   reg_1_all <- MASS::polr(stats::formula(tmp_formula), data = tmp_0_all, method = "probit")
-  options(warn = oldw)
 
   X_model_matrix_1_all <- stats::model.matrix(reg_1_all)
   xnames_1 <- paste("X", 1:ncol(X_model_matrix_1_all), sep = "")
@@ -86,8 +86,9 @@ imp_orderedcat_single <- function(y_imp,
 
   oldw <- getOption("warn")
   options(warn = -1)
+  on.exit(options(warn = oldw))
   reg_1_sub <- MASS::polr(stats::formula(tmp_formula), data = tmp_1_sub, method = "probit")
-  options(warn = oldw)
+
   #remove unneeded variables
   X_model_matrix_1_sub <- X_model_matrix_1_sub[, !is.na(stats::coefficients(reg_1_sub)),
                                                drop = FALSE]
@@ -112,9 +113,9 @@ imp_orderedcat_single <- function(y_imp,
 
     oldw <- getOption("warn")
     options(warn = -1)
+    on.exit(options(warn = oldw))
     reg_1_sub <- MASS::polr(stats::formula(tmp_formula), data = tmp_1_sub, method = "probit",
                             model = TRUE, Hess = TRUE)
-    options(warn = oldw)
 
     #stats::pnorm(abs(stats::coef(summary(reg_1_sub)))[, "t value"], lower.tail = FALSE) * 2
     tmp <- abs(stats::coef(summary(reg_1_sub))[, "t value"])

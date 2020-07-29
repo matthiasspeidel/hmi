@@ -101,9 +101,9 @@ imp_cat_multi <- function(y_imp,
   # the default message from lmer is bothering and therefore suppressed.
   oldw <- getOption("warn")
   options(warn = -1)
+  on.exit(options(warn = oldw))
   suppressMessages(reg_1_all <- nnet::multinom(stats::formula(tmp_formula), data = tmp_0_all,
                                                trace = FALSE))
-  options(warn = oldw)
 
   X_model_matrix_1_all <- stats::model.matrix(reg_1_all)
   xnames_1 <- paste("X", 1:ncol(X_model_matrix_1_all), sep = "")
@@ -132,9 +132,9 @@ imp_cat_multi <- function(y_imp,
 
   oldw <- getOption("warn")
   options(warn = -1)
+  on.exit(options(warn = oldw))
   suppressMessages(reg_1_sub <- nnet::multinom(stats::formula(tmp_formula), data = tmp_1_sub,
                                             trace = FALSE))
-  options(warn = oldw)
 
   #remove unneeded variables
   tmp <- stats::coefficients(reg_1_sub)
@@ -157,9 +157,10 @@ imp_cat_multi <- function(y_imp,
 
     oldw <- getOption("warn")
     options(warn = -1)
+    on.exit(options(warn = oldw))
     suppressMessages(reg_1_sub <- nnet::multinom(stats::formula(tmp_formula), data = tmp_1_sub,
                                                  trace = FALSE))
-    options(warn = oldw)
+
     z <- summary(reg_1_sub)$coefficients / summary(reg_1_sub)$standard.errors
     pvalues <- apply((1 - stats::pnorm(abs(z)))*2, 2, min)
     insignificant_variables <- which(pvalues > pvalue)

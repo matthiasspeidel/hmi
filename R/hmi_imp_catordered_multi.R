@@ -83,9 +83,9 @@ imp_orderedcat_multi <- function(y_imp,
   # the default message from lmer is bothering and therefore suppressed.
   oldw <- getOption("warn")
   options(warn = -1)
+  on.exit(options(warn = oldw))
   suppressMessages(reg_1_all <- ordinal::clmm(stats::formula(tmp_formula), data = tmp_0_all,
                                               model = TRUE, Hess = TRUE))
-  options(warn = oldw)
 
   X_model_matrix_1_all <- stats::model.matrix(stats::formula(paste("target ~ 0 +",
                                 paste(xnames_1, collapse = "+"))), data = tmp_0_all)
@@ -119,8 +119,8 @@ imp_orderedcat_multi <- function(y_imp,
 
   oldw <- getOption("warn")
   options(warn = -1)
+  on.exit(options(warn = oldw))
   suppressMessages(reg_1_sub <- ordinal::clmm(stats::formula(tmp_formula), data = tmp_1_sub))
-  options(warn = oldw)
 
   #remove unneeded variables
   tmp <- stats::coefficients(reg_1_sub)
@@ -152,8 +152,9 @@ imp_orderedcat_multi <- function(y_imp,
 
     oldw <- getOption("warn")
     options(warn = -1)
+    on.exit(options(warn = oldw))
     suppressMessages(reg_1_sub <- ordinal::clmm(stats::formula(tmp_formula), data = tmp_1_sub))
-    options(warn = oldw)
+
     tmp <- summary(reg_1_sub)$coefficients[, "Pr(>|z|)"]
     pvalues <- tmp[names(tmp) %in% xnames_1]
     insignificant_variables <- which(pvalues > pvalue)

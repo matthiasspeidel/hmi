@@ -531,6 +531,7 @@ list_of_rounding_formulas_maker <- function(data, default = ~ .){
 #' #if you are interested in fixed effects only, consider pool from mice:
 #' pool(with(data = dat_imputed, expr = lmer(written ~ 1 + gender + coursework + (1 + gender|school))))
 #' }
+#' @importFrom mice complete
 #' @export
 hmi_pool <- function(mids, analysis_function){
 
