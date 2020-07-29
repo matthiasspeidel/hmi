@@ -504,7 +504,7 @@ list_of_rounding_formulas_maker <- function(data, default = ~ .){
 #'  model_formula <- written ~ 1 + gender + coursework + (1 + gender|school)
 #'
 #'  set.seed(123)
-#'  dat_imputed <- hmi(data = Gcsemv, model_formula = model_formula, M = 2, maxit = 2)
+#'  dat_imputed <- hmi(data = Gcsemv, model_formula = model_formula, m = 2, maxit = 2)
 #'
 #'  my_analysis <- function(complete_data){
 #'   # In this list, you can write all the parameters you are interested in.
@@ -516,9 +516,9 @@ list_of_rounding_formulas_maker <- function(data, default = ~ .){
 #'   # the following lines are an example where the analyst is interested in the fixed intercept
 #'   # and fixed slope and the random intercepts variance,
 #'   # the random slopes variance and their covariance
-#'   my_model <- lmer(model_formula, data = complete_data)
+#'   my_model <- lme4::lmer(model_formula, data = complete_data)
 #'
-#'   parameters_of_interest[[1]] <- fixef(my_model)
+#'   parameters_of_interest[[1]] <- lme4::fixef(my_model)
 #'   parameters_of_interest[[2]] <- lme4::VarCorr(my_model)[[1]][,]
 #'   ret <- unlist(parameters_of_interest)# This line is essential if the elements of interest
 #'   #should be labeled in the following line.
@@ -529,9 +529,9 @@ list_of_rounding_formulas_maker <- function(data, default = ~ .){
 #' }
 #' hmi_pool(mids = dat_imputed, analysis_function = my_analysis)
 #' #if you are interested in fixed effects only, consider pool from mice:
-#' pool(with(data = dat_imputed, expr = lmer(written ~ 1 + gender + coursework + (1 + gender|school))))
+#' mice::pool(with(data = dat_imputed, expr = lmer(written ~ 1 + gender + coursework + (1 + gender|school))))
 #' }
-#' @importFrom mice complete
+#' @importFrom broom.mixed tidy
 #' @export
 hmi_pool <- function(mids, analysis_function){
 
@@ -1702,7 +1702,6 @@ table.default <- function(x, ...) {
 #' For imprecise elements, \code{NA} is returned.
 #' @export
 #' @rdname interval-modulo
-#' \alias{\%<unescaped bksl>\%}
 "%%.interval" <- function(x, interval){
   return(decompose_interval(interval)[, "precise"] %% x)
 }
